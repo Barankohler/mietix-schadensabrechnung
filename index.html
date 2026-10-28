@@ -169,6 +169,13 @@
   .reg-leer { color: var(--muted); font-size: 13px; padding: 12px 0; }
   .prozess { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-soft); }
   .prozess li { margin: 4px 0; }
+  .such-liste { margin-top: 6px; border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden; display: none; background: #fff; }
+  .such-liste.offen { display: block; }
+  .such-zeile { padding: 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .such-zeile:last-child { border-bottom: 0; }
+  .such-zeile:hover, .such-zeile:active { background: #FDF2F3; }
+  .such-zeile b { font-size: 14px; }
+  .such-zeile span { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
 
   /* ---- Aktionen ---- */
   .actionbar {
@@ -244,6 +251,13 @@
           <div><p class="sub">Abrechnung vom</p><input type="date" id="abrDatum"></div>
           <div id="erinWrap"><p class="sub">1. Mahnung vom <span class="opt">(optional)</span></p><input type="date" id="erinDatum"></div>
         </div>
+      </div>
+
+      <div class="field">
+        <label>Vorgang laden <span class="opt">(aus Mietvertrag-Werkzeug)</span></label>
+        <input type="text" id="suche" placeholder="Kunde, Fahrzeug oder Vertragsnummer tippen" autocomplete="off">
+        <div class="such-liste" id="sucheListe"></div>
+        <div class="hint">Antippen genügt: Name, Anschrift, Telefon, Fahrzeug, Kennzeichen, Kaution, Mietzeit und Vertragsnummer werden übernommen.</div>
       </div>
 
       <div class="field">
@@ -756,34 +770,92 @@ $('saveBtn').addEventListener('click', () => {
       .catch(() => {});
   } catch (e) {}
   fuellen();
+  /* Kennzeichen je Fahrzeug merken, gemeinsamer Speicher mit dem Schadensformular */
+  function holeKz(name) {
+    try { return (JSON.parse(localStorage.getItem('mietixKennzeichen') || '{}'))[name] || ''; } catch (e) { return ''; }
+  }
+  function merkeKz() {
+    try {
+      let k = {}; try { k = JSON.parse(localStorage.getItem('mietixKennzeichen') || '{}'); } catch (e) {}
+      if (w.value && w.value !== '__frei' && kz.value.trim()) {
+        k[w.value] = kz.value.trim();
+        localStorage.setItem('mietixKennzeichen', JSON.stringify(k));
+      }
+    } catch (e) {}
+  }
+  kz.addEventListener('input', merkeKz);
   w.addEventListener('change', () => {
     if (w.value === '__frei') { frei.style.display = 'block'; frei.value = ''; frei.focus(); }
     else if (w.value) {
       frei.style.display = 'none'; frei.value = w.value;
       const a = FLOTTE.filter(x => x.n === w.value)[0];
       if (a && !kau.value.trim()) kau.value = String(a.kaution);
+      const g = holeKz(w.value);
+      if (g && !kz.value.trim()) kz.value = g;
     } else { frei.style.display = 'none'; frei.value = ''; }
-    ['input', 'change'].forEach(ev => { frei.dispatchEvent(new Event(ev, { bubbles: true })); kau.dispatchEvent(new Event(ev, { bubbles: true })); });
+    ['input', 'change'].forEach(ev => { frei.dispatchEvent(new Event(ev, { bubbles: true })); kau.dispatchEvent(new Event(ev, { bubbles: true })); kz.dispatchEvent(new Event(ev, { bubbles: true })); });
   });
 })();
 
-/* ---------- Vorbelegen aus dem Mietvertrag (?vertrag=NR) ---------- */
-(function () {
-  const nr = new URLSearchParams(location.search).get('vertrag');
-  if (!nr) return;
-  let v = null;
-  try { v = (JSON.parse(localStorage.getItem('mietixVorgaenge') || '[]')).filter(x => x.nr === nr)[0] || null; } catch (e) {}
-  if (!v) return;
+/* ---------- Vorgänge aus dem Mietvertrag-Werkzeug (gemeinsamer Speicher) ---------- */
+function vorgaenge() {
+  try { return JSON.parse(localStorage.getItem('mietixVorgaenge') || '[]') || []; } catch (e) { return []; }
+}
+function fuelleAusVorgang(v) {
   const setz = (id, wert) => { const el = $(id); if (!el || wert == null || wert === '') return; el.value = wert; ['input', 'change'].forEach(ev => el.dispatchEvent(new Event(ev, { bubbles: true }))); };
-  setz('name', v.name); setz('mvnr', v.nr); setz('tel', v.telefon); setz('kennzeichen', v.kz);
+  setz('name', v.name); setz('mvnr', v.nr); setz('tel', v.telefon);
+  if (v.anschrift) {
+    const t = String(v.anschrift).split(',');
+    setz('strasse', t[0].trim());
+    if (t.length > 1) setz('ort', t.slice(1).join(',').trim());
+  }
   const w = $('fahrzeugwahl');
-  if ([].some.call(w.options, o => o.value === v.auto)) { w.value = v.auto; w.dispatchEvent(new Event('change', { bubbles: true })); }
-  else { w.value = '__frei'; w.dispatchEvent(new Event('change', { bubbles: true })); setz('fahrzeug', v.auto); }
+  if (v.auto) {
+    if ([].some.call(w.options, o => o.value === v.auto)) { w.value = v.auto; w.dispatchEvent(new Event('change', { bubbles: true })); }
+    else { w.value = '__frei'; w.dispatchEvent(new Event('change', { bubbles: true })); setz('fahrzeug', v.auto); }
+  }
+  if (v.kz) setz('kennzeichen', v.kz);
   const k = ((v.zahlung || {}).kaut || {}).betrag;
   if (k) setz('kaution', String(k));
-  const de = s => s ? String(s).slice(0, 10).split('-').reverse().join('.') : '';
-  if (v.vonD) setz('mietvon', de(v.vonD) + (v.vonU ? ', ' + v.vonU : ''));
-  if (v.bisD) { setz('mietbis', de(v.bisD) + (v.bisU ? ', ' + v.bisU : '')); setz('schadenstag', v.bisD); }
+  if (v.vonD) setz('mietvon', deDatum(v.vonD) + (v.vonU ? ', ' + v.vonU : ''));
+  if (v.bisD) { setz('mietbis', deDatum(v.bisD) + (v.bisU ? ', ' + v.bisU : '')); setz('schadenstag', v.bisD); }
+  render();
+}
+
+/* ---------- Vorgangssuche: tippen, antippen, fertig ---------- */
+(function () {
+  const feld = $('suche'), liste = $('sucheListe');
+  function sortiert() {
+    return vorgaenge().slice().sort((a, b) => String(b.vonD || b.erstellt || '').localeCompare(String(a.vonD || a.erstellt || '')));
+  }
+  function zeige(treffer) {
+    if (!treffer.length) { liste.classList.remove('offen'); liste.innerHTML = ''; return; }
+    liste.innerHTML = treffer.map((v, i) =>
+      '<div class="such-zeile" data-i="' + i + '"><b>' + esc(v.name || 'ohne Name') + '</b>'
+      + '<span>' + esc(v.auto || '') + (v.kz ? ', ' + esc(v.kz) : '') + (v.vonD ? ', ' + deDatum(v.vonD) : '') + (v.nr ? ', Nr. ' + esc(v.nr) : '') + '</span></div>'
+    ).join('');
+    liste.classList.add('offen');
+    liste.querySelectorAll('.such-zeile').forEach(z => z.onclick = () => {
+      fuelleAusVorgang(treffer[+z.dataset.i]);
+      liste.classList.remove('offen');
+      feld.value = '';
+    });
+  }
+  function suchen() {
+    const q = feld.value.trim().toLowerCase();
+    const alle = sortiert();
+    if (!q) { zeige(alle.slice(0, 5)); return; }
+    zeige(alle.filter(v =>
+      [v.name, v.nr, v.auto, v.kz].some(x => x && String(x).toLowerCase().indexOf(q) > -1)
+    ).slice(0, 8));
+  }
+  feld.addEventListener('input', suchen);
+  feld.addEventListener('focus', suchen);
+  document.addEventListener('click', e => { if (!liste.contains(e.target) && e.target !== feld) liste.classList.remove('offen'); });
+
+  /* Direktaufruf ?vertrag=NR funktioniert weiterhin */
+  const nr = new URLSearchParams(location.search).get('vertrag');
+  if (nr) { const v = vorgaenge().filter(x => x.nr === nr)[0]; if (v) fuelleAusVorgang(v); }
 })();
 
 /* ---------- Start ---------- */
