@@ -520,11 +520,11 @@ function textAbrechnung(d) {
     : 'Abgerechnet netto auf Grundlage des Kostenvoranschlags (§ 249 Abs. 2 Satz 2 BGB).');
   if (d.kau > 0) L.push('Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.');
   L.push('');
-  L.push('Der Fairness halber: Auf folgende Positionen verzichten wir bewusst zu Ihren Gunsten:');
-  L.push('- die Mehrwertsteuer auf die Reparaturkosten' + (d.schaden > 0 ? ' (19 %, hier ' + fmt(d.schaden * 0.19) + ')' : '') + ', wir fordern nur den Nettobetrag');
-  L.push('- die merkantile Wertminderung, die die Reparatur bei einem Fahrzeug dieser Klasse mit sich bringt');
-  L.push('- den Mietausfall für die Tage, an denen das Fahrzeug in der Werkstatt steht und nicht vermietet werden kann');
-  L.push('- unseren eigenen Bearbeitungsaufwand (Organisation, Übergaben, Fahrten)');
+  L.push('Wichtig für Sie: Diese Positionen berechnen wir Ihnen bewusst NICHT, obwohl sie uns entstehen:');
+  L.push('- Die Mehrwertsteuer' + (d.schaden > 0 ? ' von ' + fmt(d.schaden * 0.19) : '') + ': Auf der Reparaturrechnung kommen 19 % Mehrwertsteuer oben drauf. Wir fordern von Ihnen nur den Nettobetrag' + (d.schaden > 0 ? ', das spart Ihnen ' + fmt(d.schaden * 0.19) : '') + '.');
+  L.push('- Der Wertverlust des Fahrzeugs: Ein repariertes und nachlackiertes Fahrzeug ist beim Verkauf weniger wert. Diesen Wertverlust könnten wir als Schaden geltend machen, tun wir aber nicht.');
+  L.push('- Der Mietausfall: Solange das Fahrzeug in der Werkstatt steht, kann es nicht vermietet werden. Die entgangenen Mieteinnahmen für diese Tage berechnen wir Ihnen nicht.');
+  L.push('- Unser Aufwand: Organisation der Reparatur, Fahrten, Übergaben und Schriftverkehr kosten Zeit und Geld. Auch dafür berechnen wir Ihnen nichts.');
   L.push('');
   L.push('Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + d.nr + '.');
   return L;
@@ -661,11 +661,11 @@ function render() {
       ? 'Abgerechnet netto: Die Reparatur wurde durchgeführt, als vorsteuerabzugsberechtigtes Unternehmen fordern wir nur den Nettobetrag.'
       : 'Abgerechnet netto auf Grundlage des Kostenvoranschlags (§ 249 Abs. 2 Satz 2 BGB).')
       + (d.kau > 0 ? ' Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.' : '') + '</p>';
-    h += '<p>Der Fairness halber: Auf folgende Positionen verzichten wir bewusst zu Ihren Gunsten:</p><ul>'
-      + '<li>die Mehrwertsteuer auf die Reparaturkosten' + (d.schaden > 0 ? ' (19 %, hier ' + fmt(d.schaden * 0.19) + ')' : '') + ', wir fordern nur den Nettobetrag</li>'
-      + '<li>die merkantile Wertminderung, die die Reparatur bei einem Fahrzeug dieser Klasse mit sich bringt</li>'
-      + '<li>den Mietausfall für die Tage, an denen das Fahrzeug in der Werkstatt steht und nicht vermietet werden kann</li>'
-      + '<li>unseren eigenen Bearbeitungsaufwand (Organisation, Übergaben, Fahrten)</li></ul>';
+    h += '<p class="fett">Wichtig für Sie: Diese Positionen berechnen wir Ihnen bewusst NICHT, obwohl sie uns entstehen:</p><ul>'
+      + '<li><b>Die Mehrwertsteuer' + (d.schaden > 0 ? ' von ' + fmt(d.schaden * 0.19) : '') + ':</b> Auf der Reparaturrechnung kommen 19 % Mehrwertsteuer oben drauf. Wir fordern von Ihnen nur den Nettobetrag' + (d.schaden > 0 ? ', das spart Ihnen ' + fmt(d.schaden * 0.19) : '') + '.</li>'
+      + '<li><b>Der Wertverlust des Fahrzeugs:</b> Ein repariertes und nachlackiertes Fahrzeug ist beim Verkauf weniger wert. Diesen Wertverlust könnten wir als Schaden geltend machen, tun wir aber nicht.</li>'
+      + '<li><b>Der Mietausfall:</b> Solange das Fahrzeug in der Werkstatt steht, kann es nicht vermietet werden. Die entgangenen Mieteinnahmen für diese Tage berechnen wir Ihnen nicht.</li>'
+      + '<li><b>Unser Aufwand:</b> Organisation der Reparatur, Fahrten, Übergaben und Schriftverkehr kosten Zeit und Geld. Auch dafür berechnen wir Ihnen nichts.</li></ul>';
     h += '<p class="fett">Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + esc(d.nr) + '.</p>';
     h += '<p class="gruss">Mit freundlichen Grüßen<br>Baran Köhler, Mietix Sportwagenvermietung</p>';
   } else if (a === 'erinnerung' || a === 'mahnung') {
