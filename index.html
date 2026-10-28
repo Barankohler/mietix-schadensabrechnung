@@ -231,11 +231,11 @@
 
       <div class="field">
         <div class="grid3">
-          <div><p class="sub">Beleg-Nr.</p><input type="text" id="nr" placeholder="SA0414"></div>
+          <div><p class="sub">Beleg-Nr.</p><input type="text" id="nr" placeholder="SA-2026-001"></div>
           <div><p class="sub">Datum</p><input type="date" id="datum"></div>
           <div><p class="sub">Zahlbar bis</p><input type="date" id="frist"></div>
         </div>
-        <div class="hint">Eigener Nummernkreis SA, unabhängig von Lexware. Die nächste freie Nummer wird aus dem Register vorgeschlagen.</div>
+        <div class="hint">Eigener Jahres-Nummernkreis (SA-2026-001, SA-2026-002, ...), unabhängig von Lexware, eingeführt am 28.10.2026. Die nächste freie Nummer wird aus dem Register vorgeschlagen.</div>
       </div>
 
       <div class="field" id="bezugFeld" style="display:none">
@@ -361,7 +361,6 @@ const FIRMA = ["Mietix Sportwagenvermietung", "Petersanderstraße 43 B", "55252 
 const BANK = ["Baran Köhler", "Nassauische Sparkasse", "IBAN: DE59 5105 0015 0997 0123 49", "BIC: NASSDE55XXX"];
 const USTID = "USt-IdNr.: DE370171210";
 const REGKEY = "mietixSchadensbelege";
-const START_NUMMER = 413; /* höchste schon per Hand vergebene SA-Nummer */
 const FELD_IDS = ['nr', 'datum', 'frist', 'abrDatum', 'erinDatum', 'name', 'strasse', 'ort', 'kundennr', 'tel', 'fahrzeug', 'kennzeichen', 'mvnr', 'mietvon', 'mietbis', 'schadenstag', 'werkstatt', 'kvnr', 'kvdatum', 'schaden', 'kvkosten', 'kaution'];
 
 function parseNum(v) {
@@ -383,9 +382,12 @@ function isoHeute(plus) {
 function regLesen() { try { return JSON.parse(localStorage.getItem(REGKEY) || '[]') || []; } catch (e) { return []; } }
 function regSchreiben(l) { try { localStorage.setItem(REGKEY, JSON.stringify(l)); } catch (e) {} }
 function naechsteNummer() {
-  let max = START_NUMMER;
-  regLesen().forEach(b => { const m = /^SA(\d+)$/.exec(b.nr || ''); if (m) max = Math.max(max, parseInt(m[1], 10)); });
-  return 'SA' + String(max + 1).padStart(4, '0');
+  /* Jahres-Nummernkreis: SA-2026-001, SA-2026-002, ... ab Januar wieder bei 001 */
+  const jahr = new Date().getFullYear();
+  const re = new RegExp('^SA-' + jahr + '-(\\d+)$');
+  let max = 0;
+  regLesen().forEach(b => { const m = re.exec(b.nr || ''); if (m) max = Math.max(max, parseInt(m[1], 10)); });
+  return 'SA-' + jahr + '-' + String(max + 1).padStart(3, '0');
 }
 const STATUS = ['offen', 'erinnert', 'gemahnt', 'inkasso', 'bezahlt'];
 function regZeichnen() {
