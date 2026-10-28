@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏎️</text></svg>">
+<title>Mietix Schadensabrechnung</title>
+<style>
+  :root {
+    --ink: #2E2E30;
+    --ink-soft: #4A4F57;
+    --muted: #858B94;
+    --line: #E2E2E4;
+    --line-strong: #CDD0D6;
+    --paper: #FFFFFF;
+    --ground: #F2F2F4;
+    --field: #FBFBFC;
+    --accent: #C4161C;
+    --accent-dark: #9A1116;
+    --good: #1B7A44;
+    --shadow: 0 1px 2px rgba(0,0,0,.05), 0 6px 16px rgba(0,0,0,.045);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  .topbar {
+    border-bottom: 3px solid var(--accent);
+    background: var(--ink);
+    color: #fff;
+    padding: 18px 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .brand { font-weight: 700; letter-spacing: -0.02em; font-size: 18px; }
+  .brand .dot { color: var(--accent); }
+  .brand-sub { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #A9AEB6; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 22px 20px 140px;
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 22px;
+    align-items: start;
+  }
+  @media (max-width: 920px) { .wrap { grid-template-columns: 1fr; padding-bottom: 160px; } }
+
+  .panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .panel + .panel { margin-top: 22px; }
+  .panel-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .panel-head h2 { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+
+  form { padding: 8px 20px 20px; }
+  .field { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .field:last-child { border-bottom: 0; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 7px; }
+  label .opt { color: var(--muted); font-weight: 400; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  input[type="text"], input[type="date"], textarea, select {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: var(--field);
+    border: 1px solid var(--line-strong);
+    border-radius: 9px;
+    padding: 11px 12px;
+    outline: none;
+    transition: border-color .12s, box-shadow .12s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(177,18,38,.12);
+    background: #fff;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 460px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+  .sub { font-size: 12px; font-weight: 600; color: var(--muted); margin: 0 0 5px; }
+
+  .money { position: relative; }
+  .money .cur { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 600; pointer-events: none; }
+  .money input { padding-left: 26px; font-variant-numeric: tabular-nums; }
+
+  .rest {
+    margin-top: 16px; background: var(--ink); color: #fff; border-radius: 10px;
+    padding: 16px 18px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .rest .lbl { font-size: 13px; color: #B7BCC4; text-transform: uppercase; letter-spacing: 0.08em; }
+  .rest .val { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .rest.credit { background: #17402A; }
+  .rest.credit .val { color: #7FE0A6; }
+  .note { font-size: 12.5px; color: var(--good); margin-top: 8px; display: none; }
+  .note.show { display: block; }
+
+  .seg { display: flex; gap: 8px; flex-wrap: wrap; }
+  .seg label {
+    flex: 1 1 110px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 8px; border: 1px solid var(--line-strong); border-radius: 10px;
+    background: var(--field); color: var(--ink-soft); font-size: 13.5px; cursor: pointer;
+    text-align: center; margin-bottom: 0;
+    transition: border-color .12s, background .12s, color .12s;
+  }
+  .seg label:has(input:checked) { border-color: var(--accent); background: #FDF2F3; color: var(--accent-dark); font-weight: 600; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+
+  /* ---- Beleg-Vorschau (entspricht dem PDF-Hausdesign) ---- */
+  .doc-scroll { padding: 26px; max-height: 76vh; overflow-y: auto; background: #E9E9EC; border-radius: 0 0 var(--radius) var(--radius); }
+  .doc {
+    background: #fff; color: #1C1E22; padding: 34px 36px 26px;
+    box-shadow: 0 2px 14px rgba(0,0,0,.12);
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 13.5px; line-height: 1.5; max-width: 760px; margin: 0 auto;
+  }
+  .doc .kopfzeile { display: flex; justify-content: space-between; align-items: flex-start; }
+  .doc .marke { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+  .doc .marke span { color: var(--accent); }
+  .doc .firma { text-align: right; font-size: 12px; line-height: 1.55; }
+  .doc .absz { font-size: 9.5px; color: #555; border-bottom: 1px solid #999; display: inline-block; padding-bottom: 2px; margin: 26px 0 10px; }
+  .doc .adrmeta { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+  .doc .anschrift { font-size: 13.5px; line-height: 1.55; min-height: 60px; }
+  .doc .meta { font-size: 12px; text-align: right; color: #333; }
+  .doc .meta b { display: inline-block; min-width: 92px; text-align: left; font-weight: 400; color: #777; }
+  .doc h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .doc .intro { margin: 6px 0 14px; }
+  .doc table { width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: 13px; }
+  .doc th { text-align: left; border-top: 1.5px solid #222; border-bottom: 1px solid #222; padding: 6px 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .doc td { border-bottom: 1px solid #DDD; padding: 8px; vertical-align: top; }
+  .doc td.r, .doc th.r { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .doc tr.summe td { border-top: 1.5px solid #222; border-bottom: 3px double #222; font-weight: 700; font-size: 14px; }
+  .doc .pos-sub { color: #555; font-size: 12px; }
+  .doc p { margin: 0 0 10px; }
+  .doc .fett { font-weight: 700; }
+  .doc .gruss { margin-top: 22px; }
+  .doc .fuss {
+    margin-top: 30px; padding-top: 10px; border-top: 1px solid #999;
+    display: flex; justify-content: space-between; gap: 14px;
+    font-size: 9.5px; color: #555; line-height: 1.6;
+  }
+  .doc .block h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 5px; color: #777; }
+  .doc ul { margin: 0 0 10px; padding-left: 18px; }
+  .doc li { margin: 2px 0; }
+
+  /* ---- Register ---- */
+  .reg { padding: 10px 20px 20px; }
+  .reg-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; flex-wrap: wrap; }
+  .reg-row:last-child { border-bottom: 0; }
+  .reg-row b { font-variant-numeric: tabular-nums; }
+  .reg-row .wer { flex: 1; min-width: 120px; }
+  .reg-row .was { color: var(--muted); font-size: 12.5px; }
+  .badge { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .badge.offen { background: #FDF2F3; color: var(--accent-dark); }
+  .badge.erinnert { background: #FFF4E0; color: #8A5A00; }
+  .badge.gemahnt { background: #FFE9D6; color: #9A4A00; }
+  .badge.inkasso { background: #2E2E30; color: #fff; }
+  .badge.bezahlt { background: #E3F4EA; color: var(--good); }
+  .mini { font: 600 12px inherit; border: 1px solid var(--line-strong); background: #fff; color: var(--ink-soft); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+  .mini:hover { border-color: var(--muted); }
+  .reg-leer { color: var(--muted); font-size: 13px; padding: 12px 0; }
+  .prozess { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-soft); }
+  .prozess li { margin: 4px 0; }
+
+  /* ---- Aktionen ---- */
+  .actionbar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: saturate(180%) blur(10px);
+    border-top: 1px solid var(--line);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; z-index: 20;
+  }
+  button.act {
+    font: inherit; font-weight: 600; border-radius: 10px; padding: 12px 18px;
+    border: 1px solid transparent; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: transform .08s, background .12s, border-color .12s;
+  }
+  button.act:active { transform: translateY(1px); }
+  .btn-main { background: var(--accent); color: #fff; }
+  .btn-main:hover { background: var(--accent-dark); }
+  .btn-copy { background: var(--ink); color: #fff; }
+  .btn-copy:hover { background: #000; }
+  .btn-copy.done { background: var(--good); }
+  .btn-ghost { background: #fff; color: var(--ink); border-color: var(--line-strong); }
+  .btn-ghost:hover { border-color: var(--muted); }
+  svg.ic { width: 18px; height: 18px; }
+
+  @media print {
+    .topbar, .actionbar, .eingabe, .register, .panel-head { display: none !important; }
+    body, .wrap, .panel { background: #fff; box-shadow: none; border: 0; margin: 0; padding: 0; display: block; }
+    .doc-scroll { max-height: none; overflow: visible; padding: 0; background: #fff; border-radius: 0; }
+    .doc { box-shadow: none; padding: 0; max-width: none; }
+    @page { size: A4; margin: 17mm 18mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">Mietix<span class="dot">.</span></span>
+  <span class="brand-sub">Sportwagenvermietung, Schadensabrechnung</span>
+</div>
+
+<div class="wrap">
+  <!-- EINGABE -->
+  <div class="eingabe">
+  <section class="panel">
+    <div class="panel-head"><h2>Eingabe</h2></div>
+    <form id="f" autocomplete="off">
+
+      <div class="field">
+        <label>Schreiben</label>
+        <div class="seg" id="artSeg">
+          <label><input type="radio" name="art" value="abrechnung" checked>Abrechnung</label>
+          <label><input type="radio" name="art" value="erinnerung">Erinnerung</label>
+          <label><input type="radio" name="art" value="mahnung">Mahnung</label>
+          <label><input type="radio" name="art" value="inkasso">Inkasso-Übergabe</label>
+        </div>
+        <div class="hint" id="artHint"></div>
+      </div>
+
+      <div class="field">
+        <div class="grid3">
+          <div><p class="sub">Beleg-Nr.</p><input type="text" id="nr" placeholder="SA0414"></div>
+          <div><p class="sub">Datum</p><input type="date" id="datum"></div>
+          <div><p class="sub">Zahlbar bis</p><input type="date" id="frist"></div>
+        </div>
+        <div class="hint">Eigener Nummernkreis SA, unabhängig von Lexware. Die nächste freie Nummer wird aus dem Register vorgeschlagen.</div>
+      </div>
+
+      <div class="field" id="bezugFeld" style="display:none">
+        <label>Bezug</label>
+        <div class="grid2">
+          <div><p class="sub">Abrechnung vom</p><input type="date" id="abrDatum"></div>
+          <div id="erinWrap"><p class="sub">Erinnerung vom <span class="opt">(optional)</span></p><input type="date" id="erinDatum"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Kunde</label>
+        <input type="text" id="name" placeholder="Vor- und Nachname">
+        <div class="grid2" style="margin-top:8px">
+          <input type="text" id="strasse" placeholder="Straße und Hausnummer">
+          <input type="text" id="ort" placeholder="PLZ und Ort">
+        </div>
+        <div class="grid2" style="margin-top:8px">
+          <input type="text" id="kundennr" placeholder="Kundennr. (optional)">
+          <input type="text" id="tel" inputmode="tel" placeholder="WhatsApp-Nummer (optional)">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Mietvorgang</label>
+        <select id="fahrzeugwahl"></select>
+        <input type="text" id="fahrzeug" placeholder="Fahrzeug eintragen" style="margin-top:8px;display:none">
+        <div class="grid2" style="margin-top:8px">
+          <input type="text" id="kennzeichen" placeholder="Kennzeichen">
+          <input type="text" id="mvnr" placeholder="Mietvertrag-Nr.">
+        </div>
+        <div class="grid2" style="margin-top:8px">
+          <input type="text" id="mietvon" placeholder="Miete von, z. B. 15.10.2026, 18:00">
+          <input type="text" id="mietbis" placeholder="Miete bis, z. B. 15.10.2026, 24:00">
+        </div>
+        <div style="margin-top:8px"><p class="sub">Schadenstag</p><input type="date" id="schadenstag"></div>
+      </div>
+
+      <div class="field">
+        <label>Schaden</label>
+        <div class="seg" id="basisSeg">
+          <label><input type="radio" name="basis" value="kv" checked>Kostenvoranschlag</label>
+          <label><input type="radio" name="basis" value="rechnung">Rechnung (repariert)</label>
+        </div>
+        <div class="grid2" style="margin-top:10px">
+          <input type="text" id="werkstatt" placeholder="Werkstatt / Aussteller">
+          <input type="text" id="kvnr" placeholder="Beleg-Nr. des KV / der Rechnung">
+        </div>
+        <div style="margin-top:8px"><p class="sub">Datum des KV / der Rechnung</p><input type="date" id="kvdatum"></div>
+        <div class="grid3" style="margin-top:10px">
+          <div>
+            <div class="money"><span class="cur">&euro;</span><input type="text" id="schaden" inputmode="decimal" placeholder="Schaden netto"></div>
+            <div class="hint">Netto laut KV bzw. Rechnung</div>
+          </div>
+          <div>
+            <div class="money"><span class="cur">&euro;</span><input type="text" id="kvkosten" inputmode="decimal" placeholder="KV-Kosten"></div>
+            <div class="hint">Nur falls berechnet</div>
+          </div>
+          <div>
+            <div class="money"><span class="cur">&euro;</span><input type="text" id="kaution" inputmode="decimal" placeholder="Kaution"></div>
+            <div class="hint">Einbehaltene Kaution</div>
+          </div>
+        </div>
+        <div class="rest" id="restBox">
+          <span class="lbl">Offener Betrag</span>
+          <span class="val" id="restVal">0,00 &euro;</span>
+        </div>
+        <div class="note" id="note">Die Kaution deckt den Schaden vollständig. Für die Rückzahlung das Schadensformular nutzen, hier gibt es nichts zu fordern.</div>
+        <div class="hint" style="margin-top:10px">Wichtig: Hier läuft nur echter Schadensersatz (ohne Umsatzsteuer, eigener SA-Nummernkreis). Miete, Mehrkilometer und andere Leistungen laufen wie gewohnt als Rechnung über Lexware.</div>
+      </div>
+
+      <div class="field">
+        <label>So läuft der Prozess</label>
+        <ol class="prozess">
+          <li><b>Abrechnung</b> senden, Frist 14 Tage. Danach "In Register speichern": der Fall ist erfasst, der Status steht auf <i>offen</i>.</li>
+          <li>Frist verstrichen? Im Register auf <b>Laden</b> tippen: alles ist vorbelegt, die <b>Erinnerung</b> ist schon ausgewählt (Frist 7 Tage). Senden, speichern.</li>
+          <li>Wieder nichts? <b>Laden</b>, die <b>Mahnung</b> steht bereit: Verzug, letzte Frist 7 Tage, Inkasso-Ankündigung. Senden, speichern.</li>
+          <li>Immer noch nichts? <b>Laden</b>, die <b>Inkasso-Übergabe</b> steht bereit: Falldatenblatt drucken und mit den Anlagen ans Inkassobüro geben.</li>
+        </ol>
+        <div class="hint"><b>Beweise sichern, als käme jeder Fall vor Gericht:</b> Jedes Schreiben als PDF ablegen (Drucken / PDF). Versand per E-Mail und zusätzlich per Einwurf-Einschreiben, so ist der Zugang beweisbar. Dazu gehören: unterschriebener Mietvertrag, Übergabe- und Rückgabeprotokoll, Fotos mit Datum, Kostenvoranschlag oder Reparaturrechnung.</div>
+      </div>
+
+    </form>
+  </section>
+
+  <!-- REGISTER -->
+  <section class="panel register">
+    <div class="panel-head"><h2>Register</h2><button class="mini" id="regExport">Als Text kopieren</button></div>
+    <div class="reg" id="regListe"></div>
+  </section>
+  </div>
+
+  <!-- VORSCHAU -->
+  <section class="panel">
+    <div class="panel-head"><h2>Vorschau</h2></div>
+    <div class="doc-scroll"><div class="doc" id="doc"></div></div>
+  </section>
+</div>
+
+<div class="actionbar">
+  <button class="act btn-main" id="saveBtn">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+    In Register speichern
+  </button>
+  <button class="act btn-copy" id="copyBtn">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+    Text kopieren
+  </button>
+  <button class="act btn-ghost" id="waBtn">
+    <svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Z"/></svg>
+    WhatsApp
+  </button>
+  <button class="act btn-ghost" id="printBtn">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/></svg>
+    Drucken / PDF
+  </button>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const eur = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const FIRMA = ["Mietix Sportwagenvermietung", "Petersanderstraße 43 B", "55252 Mainz-Kastel", "Tel.: 0162 2701044", "info@mietix.de", "www.mietix.de"];
+const BANK = ["Baran Köhler", "Nassauische Sparkasse", "IBAN: DE59 5105 0015 0997 0123 49", "BIC: NASSDE55XXX"];
+const USTID = "USt-IdNr.: DE370171210";
+const REGKEY = "mietixSchadensbelege";
+const START_NUMMER = 413; /* höchste schon per Hand vergebene SA-Nummer */
+const FELD_IDS = ['nr', 'datum', 'frist', 'abrDatum', 'erinDatum', 'name', 'strasse', 'ort', 'kundennr', 'tel', 'fahrzeug', 'kennzeichen', 'mvnr', 'mietvon', 'mietbis', 'schadenstag', 'werkstatt', 'kvnr', 'kvdatum', 'schaden', 'kvkosten', 'kaution'];
+
+function parseNum(v) {
+  if (!v) return 0;
+  v = String(v).trim().replace(/[^\d.,-]/g, '');
+  if (v.indexOf(',') > -1) v = v.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(v);
+  return isNaN(n) ? 0 : n;
+}
+function fmt(n) { return eur.format(n); }
+function deDatum(iso) { return iso ? String(iso).slice(0, 10).split('-').reverse().join('.') : ''; }
+function isoHeute(plus) {
+  const d = new Date(); d.setDate(d.getDate() + (plus || 0));
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+
+/* ---------- Register ---------- */
+function regLesen() { try { return JSON.parse(localStorage.getItem(REGKEY) || '[]') || []; } catch (e) { return []; } }
+function regSchreiben(l) { try { localStorage.setItem(REGKEY, JSON.stringify(l)); } catch (e) {} }
+function naechsteNummer() {
+  let max = START_NUMMER;
+  regLesen().forEach(b => { const m = /^SA(\d+)$/.exec(b.nr || ''); if (m) max = Math.max(max, parseInt(m[1], 10)); });
+  return 'SA' + String(max + 1).padStart(4, '0');
+}
+const STATUS = ['offen', 'erinnert', 'gemahnt', 'inkasso', 'bezahlt'];
+function regZeichnen() {
+  const l = regLesen(), el = $('regListe');
+  if (!l.length) { el.innerHTML = '<div class="reg-leer">Noch keine Belege. Der erste gespeicherte Beleg eröffnet den Nummernkreis.</div>'; return; }
+  el.innerHTML = l.slice().reverse().map(b => {
+    const i = l.indexOf(b);
+    return '<div class="reg-row">'
+      + '<b>' + b.nr + '</b>'
+      + '<span class="wer">' + (b.name || 'ohne Name') + '<div class="was">' + deDatum(b.datum) + ', ' + (b.fahrzeug || '') + '</div></span>'
+      + '<span>' + fmt(b.offen || 0) + '</span>'
+      + '<span class="badge ' + (b.status || 'offen') + '">' + (b.status || 'offen') + '</span>'
+      + (b.felder ? '<button class="mini" data-laden="' + i + '">Laden</button>' : '')
+      + '<button class="mini" data-weiter="' + i + '">Status weiter</button>'
+      + '<button class="mini" data-weg="' + i + '">Löschen</button>'
+      + '</div>';
+  }).join('');
+  el.querySelectorAll('[data-laden]').forEach(btn => btn.onclick = () => {
+    const b = regLesen()[+btn.dataset.laden];
+    if (!b || !b.felder) return;
+    FELD_IDS.forEach(id => { if (id in b.felder) $(id).value = b.felder[id]; });
+    /* Bezugsdaten aus den gespeicherten Stufen, passende naechste Stufe vorwaehlen */
+    const st = b.stufen || {};
+    if (st.abrechnung) $('abrDatum').value = st.abrechnung;
+    if (st.erinnerung) $('erinDatum').value = st.erinnerung;
+    const naechste = st.mahnung ? 'inkasso' : st.erinnerung ? 'mahnung' : st.abrechnung ? 'erinnerung' : 'abrechnung';
+    document.querySelector('#artSeg input[value="' + naechste + '"]').checked = true;
+    $('datum').value = isoHeute(0);
+    $('frist').value = isoHeute(naechste === 'abrechnung' ? 14 : 7);
+    const w = $('fahrzeugwahl');
+    if (b.felder.fahrzeug) {
+      if ([].some.call(w.options, o => o.value === b.felder.fahrzeug)) w.value = b.felder.fahrzeug;
+      else { w.value = '__frei'; $('fahrzeug').style.display = 'block'; }
+    }
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  el.querySelectorAll('[data-weiter]').forEach(btn => btn.onclick = () => {
+    const l2 = regLesen(), b = l2[+btn.dataset.weiter];
+    b.status = STATUS[(STATUS.indexOf(b.status || 'offen') + 1) % STATUS.length];
+    regSchreiben(l2); regZeichnen();
+  });
+  el.querySelectorAll('[data-weg]').forEach(btn => btn.onclick = () => {
+    if (!confirm('Beleg wirklich aus dem Register löschen?')) return;
+    const l2 = regLesen(); l2.splice(+btn.dataset.weg, 1);
+    regSchreiben(l2); regZeichnen();
+  });
+}
+$('regExport').onclick = async function () {
+  const t = regLesen().map(b => [b.nr, deDatum(b.datum), b.name, b.fahrzeug, fmt(b.offen || 0), b.status || 'offen'].join('  |  ')).join('\n')
+    || 'Register ist leer.';
+  try { await navigator.clipboard.writeText('Mietix Schadensbelege\n\n' + t); this.textContent = 'Kopiert'; }
+  catch (e) { this.textContent = 'Kopieren nicht möglich'; }
+  setTimeout(() => { this.textContent = 'Als Text kopieren'; }, 1600);
+};
+
+/* ---------- Daten ---------- */
+function art() { const el = document.querySelector('#artSeg input:checked'); return el ? el.value : 'abrechnung'; }
+function basis() { const el = document.querySelector('#basisSeg input:checked'); return el ? el.value : 'kv'; }
+function daten() {
+  const schaden = parseNum($('schaden').value);
+  const kvk = parseNum($('kvkosten').value);
+  const kau = parseNum($('kaution').value);
+  const forderung = schaden + kvk;
+  const diff = forderung - kau;
+  return {
+    schaden, kvk, kau, forderung, diff,
+    offen: Math.max(0, diff),
+    nr: $('nr').value.trim() || naechsteNummer(),
+    datum: $('datum').value, frist: $('frist').value,
+    abrDatum: $('abrDatum').value, erinDatum: $('erinDatum').value,
+    name: $('name').value.trim(), strasse: $('strasse').value.trim(), ort: $('ort').value.trim(),
+    kundennr: $('kundennr').value.trim(),
+    fahrzeug: $('fahrzeug').value.trim(), kz: $('kennzeichen').value.trim(), mvnr: $('mvnr').value.trim(),
+    mietvon: $('mietvon').value.trim(), mietbis: $('mietbis').value.trim(),
+    schadenstag: $('schadenstag').value,
+    werkstatt: $('werkstatt').value.trim(), kvnr: $('kvnr').value.trim(), kvdatum: $('kvdatum').value,
+    nachRechnung: basis() === 'rechnung',
+  };
+}
+function fzText(d) { return d.fahrzeug + (d.kz ? ', ' + d.kz : ''); }
+function belegWort(d) { return d.nachRechnung ? 'Reparaturrechnung' : 'Kostenvoranschlag'; }
+function belegQuelle(d) {
+  let s = belegWort(d);
+  if (d.werkstatt) s += ' ' + d.werkstatt;
+  if (d.kvnr) s += ', Nr. ' + d.kvnr;
+  if (d.kvdatum) s += ' vom ' + deDatum(d.kvdatum);
+  return s;
+}
+
+/* ---------- Schreiben als Zeilen (eine Quelle für Vorschau und Text) ---------- */
+function anrede(d) { return d.name ? 'Guten Tag ' + d.name + ',' : 'Sehr geehrte Damen und Herren,'; }
+
+function textAbrechnung(d) {
+  const L = [];
+  L.push('Schadensersatzabrechnung ' + d.nr + (d.datum ? ' vom ' + deDatum(d.datum) : ''));
+  L.push('');
+  if (d.schadenstag || d.fahrzeug) L.push('Schaden' + (d.schadenstag ? ' vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ' am Mietfahrzeug ' + fzText(d) : '') + (d.mvnr ? ', Mietvertrag ' + d.mvnr : '') + (d.mietvon ? ', Mietzeit ' + d.mietvon + (d.mietbis ? ' bis ' + d.mietbis : '') : '') + '.');
+  L.push('');
+  L.push('Schadensersatz nach ' + belegQuelle(d) + ' (netto): ' + fmt(d.schaden));
+  if (d.kvk > 0) L.push('Kosten der Erstellung des Kostenvoranschlags: ' + fmt(d.kvk));
+  L.push('Einbehaltene Kaution, verrechnet: -' + fmt(d.kau).replace('-', ''));
+  L.push('Offener Betrag: ' + fmt(d.offen));
+  L.push('');
+  L.push('Keine Umsatzsteuer: Es handelt sich um echten Schadensersatz, keine umsatzsteuerbare Leistung. Dieser Beleg ist keine Rechnung im Sinne des § 14 UStG.');
+  L.push(d.nachRechnung
+    ? 'Abgerechnet netto: Die Reparatur wurde durchgeführt, als vorsteuerabzugsberechtigtes Unternehmen fordern wir nur den Nettobetrag.'
+    : 'Abgerechnet netto auf Grundlage des Kostenvoranschlags (§ 249 Abs. 2 Satz 2 BGB).');
+  if (d.kau > 0) L.push('Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.');
+  L.push('');
+  L.push('Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + d.nr + '.');
+  return L;
+}
+function textErinnerung(d) {
+  const L = [];
+  L.push('Zahlungserinnerung zur Schadensersatzabrechnung ' + d.nr);
+  L.push('');
+  L.push(anrede(d));
+  L.push('');
+  L.push('sicher ist es Ihrer Aufmerksamkeit entgangen: Aus unserer Schadensersatzabrechnung ' + d.nr + (d.abrDatum ? ' vom ' + deDatum(d.abrDatum) : '') + (d.mvnr ? ' (Mietvertrag ' + d.mvnr + ')' : '') + ' ist noch ein Betrag von ' + fmt(d.offen) + ' offen.');
+  L.push('');
+  L.push('Wir bitten Sie, den Betrag' + (d.frist ? ' bis zum ' + deDatum(d.frist) : ' innerhalb von 7 Tagen') + ' auf das unten genannte Konto zu überweisen. Verwendungszweck: ' + d.nr + '.');
+  L.push('');
+  L.push('Sollten Sie zwischenzeitlich bereits überwiesen haben, betrachten Sie dieses Schreiben bitte als gegenstandslos.');
+  return L;
+}
+function textMahnung(d) {
+  const L = [];
+  L.push('Mahnung zur Schadensersatzabrechnung ' + d.nr);
+  L.push('');
+  L.push(anrede(d));
+  L.push('');
+  L.push('trotz unserer Schadensersatzabrechnung ' + d.nr + (d.abrDatum ? ' vom ' + deDatum(d.abrDatum) : '') + (d.erinDatum ? ' und unserer Zahlungserinnerung vom ' + deDatum(d.erinDatum) : '') + ' ist der offene Betrag von ' + fmt(d.offen) + ' bis heute nicht bei uns eingegangen. Sie befinden sich im Zahlungsverzug (§ 286 BGB).');
+  L.push('');
+  L.push('Wir fordern Sie letztmalig auf, den Betrag' + (d.frist ? ' bis zum ' + deDatum(d.frist) : ' innerhalb von 7 Tagen') + ' auf das unten genannte Konto zu zahlen. Verwendungszweck: ' + d.nr + '.');
+  L.push('');
+  L.push('Geht die Zahlung bis dahin nicht ein, übergeben wir die Forderung ohne weitere Ankündigung an ein Inkassounternehmen bzw. leiten das gerichtliche Mahnverfahren ein. Die dadurch entstehenden Kosten sowie Verzugszinsen in Höhe von 5 Prozentpunkten über dem Basiszinssatz (§ 288 Abs. 1 BGB) gehen zu Ihren Lasten.');
+  return L;
+}
+function textInkasso(d) {
+  const L = [];
+  L.push('Forderungsübergabe an Inkasso, Falldatenblatt (intern)');
+  L.push('');
+  L.push('Gläubiger: ' + FIRMA[0] + ', ' + FIRMA[1] + ', ' + FIRMA[2] + ', ' + FIRMA[3] + ', ' + FIRMA[4]);
+  L.push('');
+  L.push('Schuldner: ' + [d.name, d.strasse, d.ort].filter(Boolean).join(', ') + (d.tel ? ', Tel. ' + d.tel : '') + (d.kundennr ? ', Kundennr. ' + d.kundennr : ''));
+  L.push('');
+  L.push('Hauptforderung: ' + fmt(d.offen));
+  L.push('Grund: Schadensersatz aus Mietvertrag' + (d.mvnr ? ' ' + d.mvnr : '') + (d.schadenstag ? ', Fahrzeugschaden vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ', ' + fzText(d) : '') + '.');
+  L.push('Schadenshöhe: ' + fmt(d.forderung) + ' netto laut ' + belegQuelle(d) + '. Verrechnete Kaution: ' + fmt(d.kau) + '.');
+  L.push('');
+  L.push('Verlauf:');
+  if (d.abrDatum) L.push('- Schadensersatzabrechnung ' + d.nr + ' vom ' + deDatum(d.abrDatum));
+  if (d.erinDatum) L.push('- Zahlungserinnerung vom ' + deDatum(d.erinDatum));
+  if (d.datum) L.push('- Mahnung vom ' + deDatum(d.datum) + (d.frist ? ', Frist ' + deDatum(d.frist) + ' fruchtlos verstrichen' : ''));
+  L.push('');
+  L.push('Anlagen: Mietvertrag, Übergabe- und Rückgabeprotokoll, Fotos, ' + belegWort(d) + ', Schadensersatzabrechnung, Mahnschreiben.');
+  L.push('');
+  L.push('Zahlungen bitte auf: ' + BANK.join(', '));
+  return L;
+}
+
+/* ---------- Vorschau ---------- */
+function metaZeilen(d) {
+  const a = art(), m = [];
+  m.push(['Beleg-Nr.:', d.nr]);
+  if (d.kundennr) m.push(['Kundennr.:', d.kundennr]);
+  m.push(['Datum:', d.datum ? deDatum(d.datum) : '']);
+  if (a === 'abrechnung' && d.mvnr) m.push(['Mietvertrag:', d.mvnr]);
+  if (a !== 'abrechnung' && d.abrDatum) m.push(['Abrechnung vom:', deDatum(d.abrDatum)]);
+  return m;
+}
+function titel() {
+  return { abrechnung: 'Schadensersatzabrechnung', erinnerung: 'Zahlungserinnerung', mahnung: 'Mahnung', inkasso: 'Forderungsübergabe an Inkasso' }[art()];
+}
+function render() {
+  const d = daten(), a = art();
+  /* Restbetrag-Box */
+  const credit = d.diff < 0;
+  $('restVal').textContent = fmt(credit ? Math.abs(d.diff) : d.offen);
+  document.querySelector('#restBox .lbl').textContent = credit ? 'Rückzahlung an den Kunden' : 'Offener Betrag';
+  $('restBox').classList.toggle('credit', credit);
+  $('note').classList.toggle('show', credit);
+  $('bezugFeld').style.display = a === 'abrechnung' ? 'none' : '';
+  $('erinWrap').style.display = (a === 'mahnung' || a === 'inkasso') ? '' : 'none';
+  $('artHint').textContent = {
+    abrechnung: 'Der Beleg: Schaden, verrechnete Kaution, offener Betrag mit Zahlungsfrist.',
+    erinnerung: 'Freundliche Erinnerung, wenn die Frist der Abrechnung verstrichen ist.',
+    mahnung: 'Letzte Mahnung mit Verzug, Nachfrist und Inkasso-Ankündigung.',
+    inkasso: 'Internes Datenblatt mit allen Falldaten für das Inkassobüro.'
+  }[a];
+
+  const doc = $('doc');
+  let h = '<div class="kopfzeile"><div class="marke">Mietix<span>.</span></div>'
+    + '<div class="firma">' + FIRMA.join('<br>') + '</div></div>';
+
+  if (a !== 'inkasso') {
+    h += '<div class="absz">' + FIRMA[0] + ', ' + FIRMA[1] + ', ' + FIRMA[2] + '</div>';
+    h += '<div class="adrmeta"><div class="anschrift">'
+      + [d.name, d.strasse, d.ort].filter(Boolean).map(esc).join('<br>')
+      + '</div><div class="meta">'
+      + metaZeilen(d).map(z => '<b>' + z[0] + '</b> ' + esc(z[1]) + '<br>').join('')
+      + '</div></div>';
+  } else {
+    h += '<div style="height:18px"></div>';
+  }
+
+  h += '<h1>' + titel() + '</h1>';
+
+  if (a === 'abrechnung') {
+    if (d.schadenstag || d.fahrzeug) {
+      h += '<p class="intro">Schaden' + (d.schadenstag ? ' vom ' + deDatum(d.schadenstag) : '')
+        + (d.fahrzeug ? ' am Mietfahrzeug ' + esc(fzText(d)) : '')
+        + (d.mietvon ? '. Mietzeit ' + esc(d.mietvon) + (d.mietbis ? ' bis ' + esc(d.mietbis) : '') : '') + '.</p>';
+    }
+    h += '<table><tr><th>Pos.</th><th>Bezeichnung</th><th class="r">Betrag</th></tr>';
+    let pos = 1;
+    h += '<tr><td>' + (pos++) + '</td><td>Schadensersatz nach Fahrzeugmiete'
+      + '<div class="pos-sub">' + esc(belegQuelle(d)) + ', netto</div></td>'
+      + '<td class="r">' + fmt(d.schaden) + '</td></tr>';
+    if (d.kvk > 0) h += '<tr><td>' + (pos++) + '</td><td>Kosten der Erstellung des Kostenvoranschlags</td><td class="r">' + fmt(d.kvk) + '</td></tr>';
+    h += '<tr><td>' + (pos++) + '</td><td>Einbehaltene Kaution, verrechnet'
+      + '<div class="pos-sub">' + (d.mvnr ? 'Mietvertrag ' + esc(d.mvnr) : '') + '</div></td>'
+      + '<td class="r">-' + fmt(d.kau).replace('-', '') + '</td></tr>';
+    h += '<tr class="summe"><td></td><td>Offener Betrag</td><td class="r">' + fmt(d.offen) + '</td></tr></table>';
+    h += '<p>Keine Umsatzsteuer: Es handelt sich um echten Schadensersatz, keine umsatzsteuerbare Leistung. Dieser Beleg ist keine Rechnung im Sinne des § 14 UStG.</p>';
+    h += '<p>' + (d.nachRechnung
+      ? 'Abgerechnet netto: Die Reparatur wurde durchgeführt, als vorsteuerabzugsberechtigtes Unternehmen fordern wir nur den Nettobetrag.'
+      : 'Abgerechnet netto auf Grundlage des Kostenvoranschlags (§ 249 Abs. 2 Satz 2 BGB).')
+      + (d.kau > 0 ? ' Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.' : '') + '</p>';
+    h += '<p class="fett">Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + esc(d.nr) + '.</p>';
+    h += '<p class="gruss">Mit freundlichen Grüßen<br>Baran Köhler, Mietix Sportwagenvermietung</p>';
+  } else if (a === 'erinnerung' || a === 'mahnung') {
+    const zeilen = (a === 'erinnerung' ? textErinnerung(d) : textMahnung(d)).slice(2); /* ohne Betreffzeile */
+    h += absaetze(zeilen);
+    h += '<p class="gruss">Mit freundlichen Grüßen<br>Baran Köhler, Mietix Sportwagenvermietung</p>';
+  } else {
+    const d2 = Object.assign({ tel: $('tel').value.trim() }, d);
+    h += '<div class="block"><h3>Gläubiger</h3><p>' + FIRMA.slice(0, 3).join(', ') + '<br>' + FIRMA[3] + ', ' + FIRMA[4] + '</p>'
+      + '<h3>Schuldner</h3><p>' + esc([d.name, d.strasse, d.ort].filter(Boolean).join(', ') || '(Name und Anschrift eintragen)')
+      + (d2.tel ? '<br>Tel. ' + esc(d2.tel) : '') + (d.kundennr ? '<br>Kundennr. ' + esc(d.kundennr) : '') + '</p>'
+      + '<h3>Forderung</h3><p class="fett">Hauptforderung: ' + fmt(d.offen) + '</p>'
+      + '<p>Grund: Schadensersatz aus Mietvertrag' + (d.mvnr ? ' ' + esc(d.mvnr) : '') + (d.schadenstag ? ', Fahrzeugschaden vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ', ' + esc(fzText(d)) : '') + '.<br>'
+      + 'Schadenshöhe: ' + fmt(d.forderung) + ' netto laut ' + esc(belegQuelle(d)) + '. Verrechnete Kaution: ' + fmt(d.kau) + '.<br>'
+      + 'Kein Umsatzsteuerausweis, echter Schadensersatz.</p>'
+      + '<h3>Verlauf</h3><ul>'
+      + (d.abrDatum ? '<li>Schadensersatzabrechnung ' + esc(d.nr) + ' vom ' + deDatum(d.abrDatum) + '</li>' : '')
+      + (d.erinDatum ? '<li>Zahlungserinnerung vom ' + deDatum(d.erinDatum) + '</li>' : '')
+      + (d.datum ? '<li>Mahnung vom ' + deDatum(d.datum) + (d.frist ? ', Frist ' + deDatum(d.frist) + ' fruchtlos verstrichen' : '') + '</li>' : '')
+      + '</ul>'
+      + '<h3>Anlagen</h3><ul><li>Mietvertrag</li><li>Übergabe- und Rückgabeprotokoll, Fotos</li><li>' + belegWort(d) + '</li><li>Schadensersatzabrechnung</li><li>Mahnschreiben</li></ul>'
+      + '<h3>Bankverbindung für Zahlungen</h3><p>' + BANK.join(', ') + '</p></div>';
+  }
+
+  h += '<div class="fuss"><div>' + FIRMA.slice(0, 3).join('<br>') + '</div>'
+    + '<div>' + FIRMA.slice(3).join('<br>') + '<br>' + USTID + '</div>'
+    + '<div>' + BANK.join('<br>') + '</div></div>';
+  doc.innerHTML = h;
+}
+function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+function absaetze(zeilen) {
+  let h = '', buf = [];
+  const flush = () => { if (buf.length) { h += '<p>' + esc(buf.join(' ')) + '</p>'; buf = []; } };
+  zeilen.forEach(z => { if (z === '') { flush(); } else { buf.push(z); } });
+  flush(); return h;
+}
+
+/* ---------- Text / WhatsApp / Drucken / Speichern ---------- */
+function plainText() {
+  const d = daten();
+  const L = { abrechnung: textAbrechnung, erinnerung: textErinnerung, mahnung: textMahnung, inkasso: textInkasso }[art()](d);
+  if (art() !== 'inkasso') L.push('', 'Mit freundlichen Grüßen', 'Baran Köhler, Mietix Sportwagenvermietung');
+  return L.join('\n');
+}
+$('copyBtn').addEventListener('click', async () => {
+  const btn = $('copyBtn');
+  try { await navigator.clipboard.writeText(plainText()); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = plainText(); document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  const old = btn.innerHTML;
+  btn.classList.add('done');
+  btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Kopiert';
+  setTimeout(() => { btn.classList.remove('done'); btn.innerHTML = old; }, 1600);
+});
+function digitsOnly(t) {
+  let d = String(t).replace(/[^\d+]/g, '');
+  if (d.startsWith('00')) d = d.slice(2);
+  else if (d.startsWith('+')) d = d.slice(1);
+  else if (d.startsWith('0')) d = '49' + d.slice(1);
+  return d;
+}
+$('waBtn').addEventListener('click', () => {
+  const txt = encodeURIComponent(plainText());
+  const tel = $('tel').value.trim();
+  window.open(tel ? 'https://wa.me/' + digitsOnly(tel) + '?text=' + txt : 'https://wa.me/?text=' + txt, '_blank');
+});
+$('printBtn').addEventListener('click', () => window.print());
+$('saveBtn').addEventListener('click', () => {
+  const d = daten(), a = art();
+  if (!$('nr').value.trim()) { $('nr').value = d.nr; }
+  const l = regLesen();
+  const alt = l.findIndex(b => b.nr === d.nr);
+  /* Statuskette: Speichern der Stufe setzt den Status weiter, nie zurueck */
+  const stufenStatus = { abrechnung: 'offen', erinnerung: 'erinnert', mahnung: 'gemahnt', inkasso: 'inkasso' }[a];
+  let status = stufenStatus;
+  if (alt > -1) {
+    const vorher = l[alt].status || 'offen';
+    status = STATUS.indexOf(vorher) > STATUS.indexOf(stufenStatus) ? vorher : stufenStatus;
+  }
+  const felder = {};
+  FELD_IDS.forEach(id => { felder[id] = $(id).value; });
+  const eintrag = {
+    nr: d.nr, datum: d.datum || isoHeute(0), name: d.name, fahrzeug: fzText(d),
+    offen: d.offen, status: status,
+    stufen: Object.assign({}, alt > -1 ? (l[alt].stufen || {}) : {}, (() => { const o = {}; o[a] = d.datum || isoHeute(0); return o; })()),
+    felder: felder,
+  };
+  if (alt > -1) l[alt] = eintrag; else l.push(eintrag);
+  regSchreiben(l); regZeichnen();
+  const btn = $('saveBtn'), old = btn.innerHTML;
+  btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Gespeichert';
+  setTimeout(() => { btn.innerHTML = old; }, 1600);
+});
+
+/* ---------- Flotte (aus der gemeinsamen Preisdatei) ---------- */
+(function () {
+  const w = $('fahrzeugwahl'), frei = $('fahrzeug'), kz = $('kennzeichen'), kau = $('kaution');
+  let FLOTTE = [
+    { n: "Audi RS Q8", kaution: 1950 }, { n: "Audi RS 5 ABT", kaution: 1450 },
+    { n: "Audi RS 3 Limousine", kaution: 1450 }, { n: "VW Golf 8 GTI Clubsport", kaution: 1000 },
+    { n: "Audi RS 6", kaution: 1950 }, { n: "Mercedes GLC 63 S AMG", kaution: 1450 },
+    { n: "Mercedes C 63 S AMG", kaution: 1450 }, { n: "Audi R8 performance", kaution: 2500 },
+    { n: "VW Golf 8 2.0 Diesel", kaution: 1000 }, { n: "Mercedes-Benz S580L AMG Chauffeur-Paket", kaution: 1950 },
+    { n: "BMW M 850i", kaution: 1450 }
+  ];
+  function fuellen() {
+    const vorher = w.value;
+    w.innerHTML = '<option value="">Fahrzeug wählen</option>'
+      + FLOTTE.map(a => '<option>' + a.n + '</option>').join('')
+      + '<option value="__frei">Anderes Fahrzeug</option>';
+    if (vorher && [...w.options].some(o => o.value === vorher)) w.value = vorher;
+  }
+  try {
+    fetch('https://barankohler.github.io/mietix-preise/preise.json', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(pd => { if (pd && pd.cars && pd.cars.length) { FLOTTE = pd.cars.map(c => ({ n: c.anzeige || c.n, kaution: c.kaution })); fuellen(); } })
+      .catch(() => {});
+  } catch (e) {}
+  fuellen();
+  w.addEventListener('change', () => {
+    if (w.value === '__frei') { frei.style.display = 'block'; frei.value = ''; frei.focus(); }
+    else if (w.value) {
+      frei.style.display = 'none'; frei.value = w.value;
+      const a = FLOTTE.filter(x => x.n === w.value)[0];
+      if (a && !kau.value.trim()) kau.value = String(a.kaution);
+    } else { frei.style.display = 'none'; frei.value = ''; }
+    ['input', 'change'].forEach(ev => { frei.dispatchEvent(new Event(ev, { bubbles: true })); kau.dispatchEvent(new Event(ev, { bubbles: true })); });
+  });
+})();
+
+/* ---------- Vorbelegen aus dem Mietvertrag (?vertrag=NR) ---------- */
+(function () {
+  const nr = new URLSearchParams(location.search).get('vertrag');
+  if (!nr) return;
+  let v = null;
+  try { v = (JSON.parse(localStorage.getItem('mietixVorgaenge') || '[]')).filter(x => x.nr === nr)[0] || null; } catch (e) {}
+  if (!v) return;
+  const setz = (id, wert) => { const el = $(id); if (!el || wert == null || wert === '') return; el.value = wert; ['input', 'change'].forEach(ev => el.dispatchEvent(new Event(ev, { bubbles: true }))); };
+  setz('name', v.name); setz('mvnr', v.nr); setz('tel', v.telefon); setz('kennzeichen', v.kz);
+  const w = $('fahrzeugwahl');
+  if ([].some.call(w.options, o => o.value === v.auto)) { w.value = v.auto; w.dispatchEvent(new Event('change', { bubbles: true })); }
+  else { w.value = '__frei'; w.dispatchEvent(new Event('change', { bubbles: true })); setz('fahrzeug', v.auto); }
+  const k = ((v.zahlung || {}).kaut || {}).betrag;
+  if (k) setz('kaution', String(k));
+  const de = s => s ? String(s).slice(0, 10).split('-').reverse().join('.') : '';
+  if (v.vonD) setz('mietvon', de(v.vonD) + (v.vonU ? ', ' + v.vonU : ''));
+  if (v.bisD) { setz('mietbis', de(v.bisD) + (v.bisU ? ', ' + v.bisU : '')); setz('schadenstag', v.bisD); }
+})();
+
+/* ---------- Start ---------- */
+$('datum').value = isoHeute(0);
+$('frist').value = isoHeute(14);
+$('nr').placeholder = naechsteNummer();
+document.querySelectorAll('#artSeg input').forEach(el => el.addEventListener('change', () => {
+  $('frist').value = isoHeute(art() === 'abrechnung' ? 14 : 7);
+  render();
+}));
+document.querySelectorAll('#basisSeg input').forEach(el => el.addEventListener('change', render));
+FELD_IDS.forEach(id => { const e = $(id); if (!e) return; e.addEventListener('input', render); e.addEventListener('change', render); });
+regZeichnen();
+render();
+</script>
+</body>
+</html>
