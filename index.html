@@ -257,7 +257,7 @@
         <label>Vorgang laden <span class="opt">(aus Mietvertrag-Werkzeug)</span></label>
         <input type="text" id="suche" placeholder="Kunde, Fahrzeug oder Vertragsnummer tippen" autocomplete="off">
         <div class="such-liste" id="sucheListe"></div>
-        <div class="hint">Antippen genügt: Name, Anschrift, Telefon, Fahrzeug, Kennzeichen, Kaution, Mietzeit und Vertragsnummer werden übernommen.</div>
+        <div class="hint">Antippen genügt: Name, Anschrift, Telefon, Fahrzeug, Kennzeichen, Kaution und Mietzeit werden übernommen.</div>
       </div>
 
       <div class="field">
@@ -277,13 +277,14 @@
         <label>Mietvorgang</label>
         <select id="fahrzeugwahl"></select>
         <input type="text" id="fahrzeug" placeholder="Fahrzeug eintragen" style="margin-top:8px;display:none">
+        <input type="text" id="kennzeichen" placeholder="Kennzeichen" style="margin-top:8px">
         <div class="grid2" style="margin-top:8px">
-          <input type="text" id="kennzeichen" placeholder="Kennzeichen">
-          <input type="text" id="mvnr" placeholder="Mietvertrag-Nr.">
+          <div><p class="sub">Miete von</p><input type="date" id="mietVonD"></div>
+          <div><p class="sub">Uhrzeit</p><input type="time" id="mietVonU"></div>
         </div>
         <div class="grid2" style="margin-top:8px">
-          <input type="text" id="mietvon" placeholder="Miete von, z. B. 15.10.2026, 18:00">
-          <input type="text" id="mietbis" placeholder="Miete bis, z. B. 15.10.2026, 24:00">
+          <div><p class="sub">Miete bis</p><input type="date" id="mietBisD"></div>
+          <div><p class="sub">Uhrzeit</p><input type="time" id="mietBisU"></div>
         </div>
         <div style="margin-top:8px"><p class="sub">Schadenstag</p><input type="date" id="schadenstag"></div>
       </div>
@@ -298,7 +299,6 @@
           <input type="text" id="werkstatt" placeholder="Werkstatt / Aussteller">
           <input type="text" id="kvnr" placeholder="Beleg-Nr. des KV / der Rechnung">
         </div>
-        <div style="margin-top:8px"><p class="sub">Datum des KV / der Rechnung</p><input type="date" id="kvdatum"></div>
         <div class="grid3" style="margin-top:10px">
           <div>
             <div class="money"><span class="cur">&euro;</span><input type="text" id="schaden" inputmode="decimal" placeholder="Schaden netto"></div>
@@ -375,7 +375,7 @@ const FIRMA = ["Mietix Sportwagenvermietung", "Petersanderstraße 43 B", "55252 
 const BANK = ["Baran Köhler", "Nassauische Sparkasse", "IBAN: DE59 5105 0015 0997 0123 49", "BIC: NASSDE55XXX"];
 const USTID = "USt-IdNr.: DE370171210";
 const REGKEY = "mietixSchadensbelege";
-const FELD_IDS = ['nr', 'datum', 'frist', 'abrDatum', 'erinDatum', 'name', 'strasse', 'ort', 'kundennr', 'tel', 'fahrzeug', 'kennzeichen', 'mvnr', 'mietvon', 'mietbis', 'schadenstag', 'werkstatt', 'kvnr', 'kvdatum', 'schaden', 'kvkosten', 'kaution'];
+const FELD_IDS = ['nr', 'datum', 'frist', 'abrDatum', 'erinDatum', 'name', 'strasse', 'ort', 'kundennr', 'tel', 'fahrzeug', 'kennzeichen', 'mietVonD', 'mietVonU', 'mietBisD', 'mietBisU', 'schadenstag', 'werkstatt', 'kvnr', 'schaden', 'kvkosten', 'kaution'];
 
 function parseNum(v) {
   if (!v) return 0;
@@ -475,20 +475,21 @@ function daten() {
     abrDatum: $('abrDatum').value, erinDatum: $('erinDatum').value,
     name: $('name').value.trim(), strasse: $('strasse').value.trim(), ort: $('ort').value.trim(),
     kundennr: $('kundennr').value.trim(),
-    fahrzeug: $('fahrzeug').value.trim(), kz: $('kennzeichen').value.trim(), mvnr: $('mvnr').value.trim(),
-    mietvon: $('mietvon').value.trim(), mietbis: $('mietbis').value.trim(),
+    fahrzeug: $('fahrzeug').value.trim(), kz: $('kennzeichen').value.trim(),
+    mietvon: zeitText($('mietVonD').value, $('mietVonU').value),
+    mietbis: zeitText($('mietBisD').value, $('mietBisU').value),
     schadenstag: $('schadenstag').value,
-    werkstatt: $('werkstatt').value.trim(), kvnr: $('kvnr').value.trim(), kvdatum: $('kvdatum').value,
+    werkstatt: $('werkstatt').value.trim(), kvnr: $('kvnr').value.trim(),
     nachRechnung: basis() === 'rechnung',
   };
 }
+function zeitText(datumIso, uhr) { return datumIso ? deDatum(datumIso) + (uhr ? ', ' + uhr + ' Uhr' : '') : ''; }
 function fzText(d) { return d.fahrzeug + (d.kz ? ', ' + d.kz : ''); }
 function belegWort(d) { return d.nachRechnung ? 'Reparaturrechnung' : 'Kostenvoranschlag'; }
 function belegQuelle(d) {
   let s = belegWort(d);
   if (d.werkstatt) s += ' ' + d.werkstatt;
   if (d.kvnr) s += ', Nr. ' + d.kvnr;
-  if (d.kvdatum) s += ' vom ' + deDatum(d.kvdatum);
   return s;
 }
 
@@ -499,7 +500,7 @@ function textAbrechnung(d) {
   const L = [];
   L.push('Schadensersatzabrechnung ' + d.nr + (d.datum ? ' vom ' + deDatum(d.datum) : ''));
   L.push('');
-  if (d.schadenstag || d.fahrzeug) L.push('Schaden' + (d.schadenstag ? ' vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ' am Mietfahrzeug ' + fzText(d) : '') + (d.mvnr ? ', Mietvertrag ' + d.mvnr : '') + (d.mietvon ? ', Mietzeit ' + d.mietvon + (d.mietbis ? ' bis ' + d.mietbis : '') : '') + '.');
+  if (d.schadenstag || d.fahrzeug) L.push('Schaden' + (d.schadenstag ? ' vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ' am Mietfahrzeug ' + fzText(d) : '') + (d.mietvon ? ', Mietzeit ' + d.mietvon + (d.mietbis ? ' bis ' + d.mietbis : '') : '') + '.');
   L.push('');
   L.push('Schadensersatz nach ' + belegQuelle(d) + ' (netto): ' + fmt(d.schaden));
   if (d.kvk > 0) L.push('Kosten der Erstellung des Kostenvoranschlags: ' + fmt(d.kvk));
@@ -529,7 +530,7 @@ function textErinnerung(d) {
   L.push('');
   L.push(anrede(d));
   L.push('');
-  L.push('sicher ist es Ihrer Aufmerksamkeit entgangen: Aus unserer Schadensersatzabrechnung ' + d.nr + (d.abrDatum ? ' vom ' + deDatum(d.abrDatum) : '') + (d.mvnr ? ' (Mietvertrag ' + d.mvnr + ')' : '') + ' ist noch ein Betrag von ' + fmt(d.offen) + ' offen.');
+  L.push('sicher ist es Ihrer Aufmerksamkeit entgangen: Aus unserer Schadensersatzabrechnung ' + d.nr + (d.abrDatum ? ' vom ' + deDatum(d.abrDatum) : '') + ' ist noch ein Betrag von ' + fmt(d.offen) + ' offen.');
   L.push('');
   L.push('Wir bitten Sie, den Betrag' + (d.frist ? ' bis zum ' + deDatum(d.frist) : ' innerhalb von 7 Tagen') + ' auf das unten genannte Konto zu überweisen. Verwendungszweck: ' + d.nr + '.');
   L.push('');
@@ -560,7 +561,7 @@ function textInkasso(d) {
   L.push('Schuldner: ' + [d.name, d.strasse, d.ort].filter(Boolean).join(', ') + (d.tel ? ', Tel. ' + d.tel : '') + (d.kundennr ? ', Kundennr. ' + d.kundennr : ''));
   L.push('');
   L.push('Hauptforderung: ' + fmt(d.offen));
-  L.push('Grund: Schadensersatz aus Mietvertrag' + (d.mvnr ? ' ' + d.mvnr : '') + (d.schadenstag ? ', Fahrzeugschaden vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ', ' + fzText(d) : '') + '.');
+  L.push('Grund: Schadensersatz aus Fahrzeugmiete' + (d.mietvon ? ' (' + d.mietvon + (d.mietbis ? ' bis ' + d.mietbis : '') + ')' : '') + (d.schadenstag ? ', Fahrzeugschaden vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ', ' + fzText(d) : '') + '.');
   L.push('Schadenshöhe: ' + fmt(d.forderung) + ' netto laut ' + belegQuelle(d) + '. Verrechnete Kaution: ' + fmt(d.kau) + '.');
   L.push('');
   L.push('Verlauf:');
@@ -580,7 +581,6 @@ function metaZeilen(d) {
   m.push(['Beleg-Nr.:', d.nr]);
   if (d.kundennr) m.push(['Kundennr.:', d.kundennr]);
   m.push(['Datum:', d.datum ? deDatum(d.datum) : '']);
-  if (a === 'abrechnung' && d.mvnr) m.push(['Mietvertrag:', d.mvnr]);
   if (a !== 'abrechnung' && d.abrDatum) m.push(['Abrechnung vom:', deDatum(d.abrDatum)]);
   return m;
 }
@@ -595,7 +595,7 @@ function tabelleHTML(d) {
     + '<td class="r">' + fmt(d.schaden) + '</td></tr>';
   if (d.kvk > 0) h += '<tr><td>' + (pos++) + '</td><td>Kosten der Erstellung des Kostenvoranschlags</td><td class="r">' + fmt(d.kvk) + '</td></tr>';
   h += '<tr><td>' + (pos++) + '</td><td>Einbehaltene Kaution, verrechnet'
-    + '<div class="pos-sub">' + (d.mvnr ? 'Mietvertrag ' + esc(d.mvnr) : '') + '</div></td>'
+    + '<div class="pos-sub">' + (d.mietvon ? 'Mietzeit ' + esc(d.mietvon) + (d.mietbis ? ' bis ' + esc(d.mietbis) : '') : '') + '</div></td>'
     + '<td class="r">-' + fmt(d.kau).replace('-', '') + '</td></tr>';
   h += '<tr class="summe"><td></td><td>Offener Betrag</td><td class="r">' + fmt(d.offen) + '</td></tr></table>';
   return h;
@@ -664,7 +664,7 @@ function render() {
       + '<h3>Schuldner</h3><p>' + esc([d.name, d.strasse, d.ort].filter(Boolean).join(', ') || '(Name und Anschrift eintragen)')
       + (d2.tel ? '<br>Tel. ' + esc(d2.tel) : '') + (d.kundennr ? '<br>Kundennr. ' + esc(d.kundennr) : '') + '</p>'
       + '<h3>Forderung</h3><p class="fett">Hauptforderung: ' + fmt(d.offen) + '</p>'
-      + '<p>Grund: Schadensersatz aus Mietvertrag' + (d.mvnr ? ' ' + esc(d.mvnr) : '') + (d.schadenstag ? ', Fahrzeugschaden vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ', ' + esc(fzText(d)) : '') + '.<br>'
+      + '<p>Grund: Schadensersatz aus Fahrzeugmiete' + (d.mietvon ? ' (' + esc(d.mietvon) + (d.mietbis ? ' bis ' + esc(d.mietbis) : '') + ')' : '') + (d.schadenstag ? ', Fahrzeugschaden vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ', ' + esc(fzText(d)) : '') + '.<br>'
       + 'Schadenshöhe: ' + fmt(d.forderung) + ' netto laut ' + esc(belegQuelle(d)) + '. Verrechnete Kaution: ' + fmt(d.kau) + '.<br>'
       + 'Kein Umsatzsteuerausweis, echter Schadensersatz.</p>'
       + '<h3>Verlauf</h3><ul>'
@@ -803,7 +803,7 @@ function vorgaenge() {
 }
 function fuelleAusVorgang(v) {
   const setz = (id, wert) => { const el = $(id); if (!el || wert == null || wert === '') return; el.value = wert; ['input', 'change'].forEach(ev => el.dispatchEvent(new Event(ev, { bubbles: true }))); };
-  setz('name', v.name); setz('mvnr', v.nr); setz('tel', v.telefon);
+  setz('name', v.name); setz('tel', v.telefon);
   if (v.anschrift) {
     const t = String(v.anschrift).split(',');
     setz('strasse', t[0].trim());
@@ -817,8 +817,9 @@ function fuelleAusVorgang(v) {
   if (v.kz) setz('kennzeichen', v.kz);
   const k = ((v.zahlung || {}).kaut || {}).betrag;
   if (k) setz('kaution', String(k));
-  if (v.vonD) setz('mietvon', deDatum(v.vonD) + (v.vonU ? ', ' + v.vonU : ''));
-  if (v.bisD) { setz('mietbis', deDatum(v.bisD) + (v.bisU ? ', ' + v.bisU : '')); setz('schadenstag', v.bisD); }
+  const uhr = u => { const m = /^(\d{1,2})[:.](\d{2})/.exec(String(u || '').trim()); if (!m) return ''; return m[1] === '24' ? '23:59' : m[1].padStart(2, '0') + ':' + m[2]; };
+  if (v.vonD) { setz('mietVonD', v.vonD); setz('mietVonU', uhr(v.vonU)); }
+  if (v.bisD) { setz('mietBisD', v.bisD); setz('mietBisU', uhr(v.bisU)); setz('schadenstag', v.bisD); }
   render();
 }
 
@@ -832,7 +833,7 @@ function fuelleAusVorgang(v) {
     if (!treffer.length) { liste.classList.remove('offen'); liste.innerHTML = ''; return; }
     liste.innerHTML = treffer.map((v, i) =>
       '<div class="such-zeile" data-i="' + i + '"><b>' + esc(v.name || 'ohne Name') + '</b>'
-      + '<span>' + esc(v.auto || '') + (v.kz ? ', ' + esc(v.kz) : '') + (v.vonD ? ', ' + deDatum(v.vonD) : '') + (v.nr ? ', Nr. ' + esc(v.nr) : '') + '</span></div>'
+      + '<span>' + esc(v.auto || '') + (v.kz ? ', ' + esc(v.kz) : '') + (v.vonD ? ', ' + deDatum(v.vonD) : '') + '</span></div>'
     ).join('');
     liste.classList.add('offen');
     liste.querySelectorAll('.such-zeile').forEach(z => z.onclick = () => {
