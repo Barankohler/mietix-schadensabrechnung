@@ -222,7 +222,7 @@
   <!-- EINGABE -->
   <div class="eingabe">
   <section class="panel">
-    <div class="panel-head"><h2>Eingabe</h2></div>
+    <div class="panel-head"><h2>Eingabe</h2><button class="mini" id="leerBtn" type="button">Zurücksetzen</button></div>
     <form id="f" autocomplete="off">
 
       <div class="field">
@@ -877,6 +877,20 @@ function fuelleAusVorgang(v) {
   const nr = new URLSearchParams(location.search).get('vertrag');
   if (nr) { const v = vorgaenge().filter(x => x.nr === nr)[0]; if (v) fuelleAusVorgang(v); }
 })();
+
+/* ---------- Zurücksetzen: alles leeren, wie frisch geöffnet ---------- */
+$('leerBtn').addEventListener('click', () => {
+  FELD_IDS.forEach(id => { const e = $(id); if (e) e.value = ''; });
+  const w = $('fahrzeugwahl');
+  w.value = '';
+  $('fahrzeug').style.display = 'none';
+  document.querySelector('#artSeg input[value="abrechnung"]').checked = true;
+  $('datum').value = isoHeute(0);
+  $('frist').value = isoHeute(14);
+  $('suche').value = '';
+  $('sucheListe').classList.remove('offen');
+  render();
+});
 
 /* ---------- Start ---------- */
 $('datum').value = isoHeute(0);
