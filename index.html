@@ -222,8 +222,8 @@
         <label>Schreiben</label>
         <div class="seg" id="artSeg">
           <label><input type="radio" name="art" value="abrechnung" checked>Abrechnung</label>
-          <label><input type="radio" name="art" value="erinnerung">Erinnerung</label>
-          <label><input type="radio" name="art" value="mahnung">Mahnung</label>
+          <label><input type="radio" name="art" value="erinnerung">1. Mahnung</label>
+          <label><input type="radio" name="art" value="mahnung">2. Mahnung</label>
           <label><input type="radio" name="art" value="inkasso">Inkasso-Übergabe</label>
         </div>
         <div class="hint" id="artHint"></div>
@@ -242,7 +242,7 @@
         <label>Bezug</label>
         <div class="grid2">
           <div><p class="sub">Abrechnung vom</p><input type="date" id="abrDatum"></div>
-          <div id="erinWrap"><p class="sub">Erinnerung vom <span class="opt">(optional)</span></p><input type="date" id="erinDatum"></div>
+          <div id="erinWrap"><p class="sub">1. Mahnung vom <span class="opt">(optional)</span></p><input type="date" id="erinDatum"></div>
         </div>
       </div>
 
@@ -311,8 +311,8 @@
         <label>So läuft der Prozess</label>
         <ol class="prozess">
           <li><b>Abrechnung</b> senden, Frist 14 Tage. Danach "In Register speichern": der Fall ist erfasst, der Status steht auf <i>offen</i>.</li>
-          <li>Frist verstrichen? Im Register auf <b>Laden</b> tippen: alles ist vorbelegt, die <b>Erinnerung</b> ist schon ausgewählt (Frist 7 Tage). Senden, speichern.</li>
-          <li>Wieder nichts? <b>Laden</b>, die <b>Mahnung</b> steht bereit: Verzug, letzte Frist 7 Tage, Inkasso-Ankündigung. Senden, speichern.</li>
+          <li>Frist verstrichen? Im Register auf <b>Laden</b> tippen: alles ist vorbelegt, die <b>1. Mahnung</b> ist schon ausgewählt (Frist 7 Tage). Senden, speichern.</li>
+          <li>Wieder nichts? <b>Laden</b>, die <b>2. und letzte Mahnung</b> steht bereit: Verzug, letzte Frist 7 Tage, Inkasso-Ankündigung. Senden, speichern.</li>
           <li>Immer noch nichts? <b>Laden</b>, die <b>Inkasso-Übergabe</b> steht bereit: Falldatenblatt drucken und mit den Anlagen ans Inkassobüro geben.</li>
         </ol>
         <div class="hint"><b>Beweise sichern, als käme jeder Fall vor Gericht:</b> Jedes Schreiben als PDF ablegen (Drucken / PDF). Versand per E-Mail und zusätzlich per Einwurf-Einschreiben, so ist der Zugang beweisbar. Dazu gehören: unterschriebener Mietvertrag, Übergabe- und Rückgabeprotokoll, Fotos mit Datum, Kostenvoranschlag oder Reparaturrechnung.</div>
@@ -501,9 +501,17 @@ function textAbrechnung(d) {
   L.push('Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + d.nr + '.');
   return L;
 }
+function textAufstellung(d) {
+  const L = ['', 'Aufstellung (wie Schadensersatzabrechnung ' + d.nr + '):'];
+  L.push('Schadensersatz nach ' + belegQuelle(d) + ' (netto): ' + fmt(d.schaden));
+  if (d.kvk > 0) L.push('Kosten der Erstellung des Kostenvoranschlags: ' + fmt(d.kvk));
+  L.push('Einbehaltene Kaution, verrechnet: -' + fmt(d.kau).replace('-', ''));
+  L.push('Offener Betrag: ' + fmt(d.offen));
+  return L;
+}
 function textErinnerung(d) {
   const L = [];
-  L.push('Zahlungserinnerung zur Schadensersatzabrechnung ' + d.nr);
+  L.push('1. Mahnung zur Schadensersatzabrechnung ' + d.nr);
   L.push('');
   L.push(anrede(d));
   L.push('');
@@ -512,19 +520,21 @@ function textErinnerung(d) {
   L.push('Wir bitten Sie, den Betrag' + (d.frist ? ' bis zum ' + deDatum(d.frist) : ' innerhalb von 7 Tagen') + ' auf das unten genannte Konto zu überweisen. Verwendungszweck: ' + d.nr + '.');
   L.push('');
   L.push('Sollten Sie zwischenzeitlich bereits überwiesen haben, betrachten Sie dieses Schreiben bitte als gegenstandslos.');
+  L.push(...textAufstellung(d));
   return L;
 }
 function textMahnung(d) {
   const L = [];
-  L.push('Mahnung zur Schadensersatzabrechnung ' + d.nr);
+  L.push('2. und letzte Mahnung zur Schadensersatzabrechnung ' + d.nr);
   L.push('');
   L.push(anrede(d));
   L.push('');
-  L.push('trotz unserer Schadensersatzabrechnung ' + d.nr + (d.abrDatum ? ' vom ' + deDatum(d.abrDatum) : '') + (d.erinDatum ? ' und unserer Zahlungserinnerung vom ' + deDatum(d.erinDatum) : '') + ' ist der offene Betrag von ' + fmt(d.offen) + ' bis heute nicht bei uns eingegangen. Sie befinden sich im Zahlungsverzug (§ 286 BGB).');
+  L.push('trotz unserer Schadensersatzabrechnung ' + d.nr + (d.abrDatum ? ' vom ' + deDatum(d.abrDatum) : '') + (d.erinDatum ? ' und unserer 1. Mahnung vom ' + deDatum(d.erinDatum) : '') + ' ist der offene Betrag von ' + fmt(d.offen) + ' bis heute nicht bei uns eingegangen. Sie befinden sich im Zahlungsverzug (§ 286 BGB).');
   L.push('');
   L.push('Wir fordern Sie letztmalig auf, den Betrag' + (d.frist ? ' bis zum ' + deDatum(d.frist) : ' innerhalb von 7 Tagen') + ' auf das unten genannte Konto zu zahlen. Verwendungszweck: ' + d.nr + '.');
   L.push('');
   L.push('Geht die Zahlung bis dahin nicht ein, übergeben wir die Forderung ohne weitere Ankündigung an ein Inkassounternehmen bzw. leiten das gerichtliche Mahnverfahren ein. Die dadurch entstehenden Kosten sowie Verzugszinsen in Höhe von 5 Prozentpunkten über dem Basiszinssatz (§ 288 Abs. 1 BGB) gehen zu Ihren Lasten.');
+  L.push(...textAufstellung(d));
   return L;
 }
 function textInkasso(d) {
@@ -541,8 +551,8 @@ function textInkasso(d) {
   L.push('');
   L.push('Verlauf:');
   if (d.abrDatum) L.push('- Schadensersatzabrechnung ' + d.nr + ' vom ' + deDatum(d.abrDatum));
-  if (d.erinDatum) L.push('- Zahlungserinnerung vom ' + deDatum(d.erinDatum));
-  if (d.datum) L.push('- Mahnung vom ' + deDatum(d.datum) + (d.frist ? ', Frist ' + deDatum(d.frist) + ' fruchtlos verstrichen' : ''));
+  if (d.erinDatum) L.push('- 1. Mahnung vom ' + deDatum(d.erinDatum));
+  if (d.datum) L.push('- 2. und letzte Mahnung vom ' + deDatum(d.datum) + (d.frist ? ', Frist ' + deDatum(d.frist) + ' fruchtlos verstrichen' : ''));
   L.push('');
   L.push('Anlagen: Mietvertrag, Übergabe- und Rückgabeprotokoll, Fotos, ' + belegWort(d) + ', Schadensersatzabrechnung, Mahnschreiben.');
   L.push('');
@@ -561,8 +571,22 @@ function metaZeilen(d) {
   return m;
 }
 function titel() {
-  return { abrechnung: 'Schadensersatzabrechnung', erinnerung: 'Zahlungserinnerung', mahnung: 'Mahnung', inkasso: 'Forderungsübergabe an Inkasso' }[art()];
+  return { abrechnung: 'Schadensersatzabrechnung', erinnerung: '1. Mahnung', mahnung: '2. und letzte Mahnung', inkasso: 'Forderungsübergabe an Inkasso' }[art()];
 }
+function tabelleHTML(d) {
+  let h = '<table><tr><th>Pos.</th><th>Bezeichnung</th><th class="r">Betrag</th></tr>';
+  let pos = 1;
+  h += '<tr><td>' + (pos++) + '</td><td>Schadensersatz nach Fahrzeugmiete'
+    + '<div class="pos-sub">' + esc(belegQuelle(d)) + ', netto</div></td>'
+    + '<td class="r">' + fmt(d.schaden) + '</td></tr>';
+  if (d.kvk > 0) h += '<tr><td>' + (pos++) + '</td><td>Kosten der Erstellung des Kostenvoranschlags</td><td class="r">' + fmt(d.kvk) + '</td></tr>';
+  h += '<tr><td>' + (pos++) + '</td><td>Einbehaltene Kaution, verrechnet'
+    + '<div class="pos-sub">' + (d.mvnr ? 'Mietvertrag ' + esc(d.mvnr) : '') + '</div></td>'
+    + '<td class="r">-' + fmt(d.kau).replace('-', '') + '</td></tr>';
+  h += '<tr class="summe"><td></td><td>Offener Betrag</td><td class="r">' + fmt(d.offen) + '</td></tr></table>';
+  return h;
+}
+
 function render() {
   const d = daten(), a = art();
   /* Restbetrag-Box */
@@ -575,8 +599,8 @@ function render() {
   $('erinWrap').style.display = (a === 'mahnung' || a === 'inkasso') ? '' : 'none';
   $('artHint').textContent = {
     abrechnung: 'Der Beleg: Schaden, verrechnete Kaution, offener Betrag mit Zahlungsfrist.',
-    erinnerung: 'Freundliche Erinnerung, wenn die Frist der Abrechnung verstrichen ist.',
-    mahnung: 'Letzte Mahnung mit Verzug, Nachfrist und Inkasso-Ankündigung.',
+    erinnerung: 'Freundliche 1. Mahnung mit derselben Aufstellung wie die Abrechnung.',
+    mahnung: '2. und letzte Mahnung: Verzug, Nachfrist, Inkasso-Ankündigung, volle Aufstellung.',
     inkasso: 'Internes Datenblatt mit allen Falldaten für das Inkassobüro.'
   }[a];
 
@@ -603,16 +627,7 @@ function render() {
         + (d.fahrzeug ? ' am Mietfahrzeug ' + esc(fzText(d)) : '')
         + (d.mietvon ? '. Mietzeit ' + esc(d.mietvon) + (d.mietbis ? ' bis ' + esc(d.mietbis) : '') : '') + '.</p>';
     }
-    h += '<table><tr><th>Pos.</th><th>Bezeichnung</th><th class="r">Betrag</th></tr>';
-    let pos = 1;
-    h += '<tr><td>' + (pos++) + '</td><td>Schadensersatz nach Fahrzeugmiete'
-      + '<div class="pos-sub">' + esc(belegQuelle(d)) + ', netto</div></td>'
-      + '<td class="r">' + fmt(d.schaden) + '</td></tr>';
-    if (d.kvk > 0) h += '<tr><td>' + (pos++) + '</td><td>Kosten der Erstellung des Kostenvoranschlags</td><td class="r">' + fmt(d.kvk) + '</td></tr>';
-    h += '<tr><td>' + (pos++) + '</td><td>Einbehaltene Kaution, verrechnet'
-      + '<div class="pos-sub">' + (d.mvnr ? 'Mietvertrag ' + esc(d.mvnr) : '') + '</div></td>'
-      + '<td class="r">-' + fmt(d.kau).replace('-', '') + '</td></tr>';
-    h += '<tr class="summe"><td></td><td>Offener Betrag</td><td class="r">' + fmt(d.offen) + '</td></tr></table>';
+    h += tabelleHTML(d);
     h += '<p>Keine Umsatzsteuer: Es handelt sich um echten Schadensersatz, keine umsatzsteuerbare Leistung. Dieser Beleg ist keine Rechnung im Sinne des § 14 UStG.</p>';
     h += '<p>' + (d.nachRechnung
       ? 'Abgerechnet netto: Die Reparatur wurde durchgeführt, als vorsteuerabzugsberechtigtes Unternehmen fordern wir nur den Nettobetrag.'
@@ -621,8 +636,13 @@ function render() {
     h += '<p class="fett">Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + esc(d.nr) + '.</p>';
     h += '<p class="gruss">Mit freundlichen Grüßen<br>Baran Köhler, Mietix Sportwagenvermietung</p>';
   } else if (a === 'erinnerung' || a === 'mahnung') {
-    const zeilen = (a === 'erinnerung' ? textErinnerung(d) : textMahnung(d)).slice(2); /* ohne Betreffzeile */
+    let zeilen = (a === 'erinnerung' ? textErinnerung(d) : textMahnung(d)).slice(2); /* ohne Betreffzeile */
+    const cut = zeilen.findIndex(z => z.startsWith('Aufstellung (wie')); /* Text-Aufstellung raus, hier kommt die Tabelle */
+    if (cut > -1) zeilen = zeilen.slice(0, cut);
     h += absaetze(zeilen);
+    h += '<p>Zur Nachvollziehbarkeit nochmals die vollständige Aufstellung aus der Schadensersatzabrechnung ' + esc(d.nr) + ':</p>';
+    h += tabelleHTML(d);
+    h += '<p class="fett">Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + '. Verwendungszweck: ' + esc(d.nr) + '.</p>';
     h += '<p class="gruss">Mit freundlichen Grüßen<br>Baran Köhler, Mietix Sportwagenvermietung</p>';
   } else {
     const d2 = Object.assign({ tel: $('tel').value.trim() }, d);
@@ -635,8 +655,8 @@ function render() {
       + 'Kein Umsatzsteuerausweis, echter Schadensersatz.</p>'
       + '<h3>Verlauf</h3><ul>'
       + (d.abrDatum ? '<li>Schadensersatzabrechnung ' + esc(d.nr) + ' vom ' + deDatum(d.abrDatum) + '</li>' : '')
-      + (d.erinDatum ? '<li>Zahlungserinnerung vom ' + deDatum(d.erinDatum) + '</li>' : '')
-      + (d.datum ? '<li>Mahnung vom ' + deDatum(d.datum) + (d.frist ? ', Frist ' + deDatum(d.frist) + ' fruchtlos verstrichen' : '') + '</li>' : '')
+      + (d.erinDatum ? '<li>1. Mahnung vom ' + deDatum(d.erinDatum) + '</li>' : '')
+      + (d.datum ? '<li>2. und letzte Mahnung vom ' + deDatum(d.datum) + (d.frist ? ', Frist ' + deDatum(d.frist) + ' fruchtlos verstrichen' : '') + '</li>' : '')
       + '</ul>'
       + '<h3>Anlagen</h3><ul><li>Mietvertrag</li><li>Übergabe- und Rückgabeprotokoll, Fotos</li><li>' + belegWort(d) + '</li><li>Schadensersatzabrechnung</li><li>Mahnschreiben</li></ul>'
       + '<h3>Bankverbindung für Zahlungen</h3><p>' + BANK.join(', ') + '</p></div>';
