@@ -513,6 +513,12 @@ function textAbrechnung(d) {
     : 'Abgerechnet netto auf Grundlage des Kostenvoranschlags (§ 249 Abs. 2 Satz 2 BGB).');
   if (d.kau > 0) L.push('Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.');
   L.push('');
+  L.push('Der Fairness halber: Auf folgende Positionen verzichten wir bewusst zu Ihren Gunsten:');
+  L.push('- die Mehrwertsteuer auf die Reparaturkosten' + (d.schaden > 0 ? ' (19 %, hier ' + fmt(d.schaden * 0.19) + ')' : '') + ', wir fordern nur den Nettobetrag');
+  L.push('- die merkantile Wertminderung, die die Reparatur bei einem Fahrzeug dieser Klasse mit sich bringt');
+  L.push('- den Mietausfall für die Tage, an denen das Fahrzeug in der Werkstatt steht und nicht vermietet werden kann');
+  L.push('- unseren eigenen Bearbeitungsaufwand (Organisation, Übergaben, Fahrten)');
+  L.push('');
   L.push('Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + d.nr + '.');
   return L;
 }
@@ -647,6 +653,11 @@ function render() {
       ? 'Abgerechnet netto: Die Reparatur wurde durchgeführt, als vorsteuerabzugsberechtigtes Unternehmen fordern wir nur den Nettobetrag.'
       : 'Abgerechnet netto auf Grundlage des Kostenvoranschlags (§ 249 Abs. 2 Satz 2 BGB).')
       + (d.kau > 0 ? ' Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.' : '') + '</p>';
+    h += '<p>Der Fairness halber: Auf folgende Positionen verzichten wir bewusst zu Ihren Gunsten:</p><ul>'
+      + '<li>die Mehrwertsteuer auf die Reparaturkosten' + (d.schaden > 0 ? ' (19 %, hier ' + fmt(d.schaden * 0.19) + ')' : '') + ', wir fordern nur den Nettobetrag</li>'
+      + '<li>die merkantile Wertminderung, die die Reparatur bei einem Fahrzeug dieser Klasse mit sich bringt</li>'
+      + '<li>den Mietausfall für die Tage, an denen das Fahrzeug in der Werkstatt steht und nicht vermietet werden kann</li>'
+      + '<li>unseren eigenen Bearbeitungsaufwand (Organisation, Übergaben, Fahrten)</li></ul>';
     h += '<p class="fett">Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + esc(d.nr) + '.</p>';
     h += '<p class="gruss">Mit freundlichen Grüßen<br>Baran Köhler, Mietix Sportwagenvermietung</p>';
   } else if (a === 'erinnerung' || a === 'mahnung') {
