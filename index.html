@@ -496,9 +496,16 @@ function belegQuelle(d) {
 /* ---------- Schreiben als Zeilen (eine Quelle für Vorschau und Text) ---------- */
 function anrede(d) { return d.name ? 'Guten Tag ' + d.name + ',' : 'Sehr geehrte Damen und Herren,'; }
 
+function empathie(d) {
+  return 'es ist schade, dass es zu diesem Schaden gekommen ist, eine solche Nachricht ist nie angenehm. Deshalb möchten wir die Abwicklung so transparent und fair wie möglich gestalten: Die Schadenshöhe haben nicht wir festgelegt, sie wurde ' + (d.nachRechnung ? 'von der Werkstatt mit ihrer Rechnung ermittelt' : 'von dritter Seite nach den Kalkulationsvorgaben des Herstellers ermittelt') + '. Wir verdienen an diesem Schaden nichts und geben ausschließlich die tatsächlichen Kosten weiter.';
+}
 function textAbrechnung(d) {
   const L = [];
   L.push('Schadensersatzabrechnung ' + d.nr + (d.datum ? ' vom ' + deDatum(d.datum) : ''));
+  L.push('');
+  L.push(anrede(d));
+  L.push('');
+  L.push(empathie(d));
   L.push('');
   if (d.schadenstag || d.fahrzeug) L.push('Schaden' + (d.schadenstag ? ' vom ' + deDatum(d.schadenstag) : '') + (d.fahrzeug ? ' am Mietfahrzeug ' + fzText(d) : '') + (d.mietvon ? ', Mietzeit ' + d.mietvon + (d.mietbis ? ' bis ' + d.mietbis : '') : '') + '.');
   L.push('');
@@ -642,6 +649,7 @@ function render() {
   h += '<h1>' + titel() + '</h1>';
 
   if (a === 'abrechnung') {
+    h += '<p>' + esc(anrede(d)) + '</p><p>' + esc(empathie(d)) + '</p>';
     if (d.schadenstag || d.fahrzeug) {
       h += '<p class="intro">Schaden' + (d.schadenstag ? ' vom ' + deDatum(d.schadenstag) : '')
         + (d.fahrzeug ? ' am Mietfahrzeug ' + esc(fzText(d)) : '')
