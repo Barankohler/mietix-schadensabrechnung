@@ -53,7 +53,8 @@
     gap: 22px;
     align-items: start;
   }
-  @media (max-width: 920px) { .wrap { grid-template-columns: 1fr; padding-bottom: 160px; } }
+  @media (max-width: 920px) { .wrap { grid-template-columns: minmax(0, 1fr); padding-bottom: 160px; } }
+  @media (max-width: 460px) { .wrap { padding-left: 12px; padding-right: 12px; } .panel > * { min-width: 0; } }
 
   .panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
   .panel + .panel { margin-top: 22px; }
