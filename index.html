@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏎️</text></svg>">
 <title>Mietix Schadensabrechnung</title>
 <style>
-input,select,textarea{font-size:16px;font-family:inherit}
+input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizing:border-box}input[type=date],input[type=time],input[type=datetime-local]{-webkit-appearance:none;appearance:none;min-width:0;max-width:100%;min-height:44px}select{min-width:0}
 
   :root {
     --ink: #2E2E30;
@@ -258,7 +258,7 @@ input,select,textarea{font-size:16px;font-family:inherit}
 
       <div class="field">
         <label>Vorgang laden <span class="opt">(aus Mietvertrag-Werkzeug)</span></label>
-        <input type="text" id="suche" placeholder="Kunde, Fahrzeug oder Vertragsnummer tippen" autocomplete="off">
+        <input type="text" id="suche" placeholder="Kunde, Auto oder Nummer" autocomplete="off">
         <div class="such-liste" id="sucheListe"></div>
         <div class="hint">Antippen genügt: Name, Anschrift, Telefon, Fahrzeug, Kennzeichen, Kaution und Mietzeit werden übernommen.</div>
       </div>
