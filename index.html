@@ -257,7 +257,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
       </div>
 
       <div class="field">
-        <label>Vorgang laden <span class="opt">(aus Mietvertrag-Werkzeug)</span></label>
+        <label>Vertrag laden <span class="opt">(aus Verträge)</span></label>
         <input type="text" id="suche" placeholder="Kunde, Auto oder Nummer" autocomplete="off">
         <div class="such-liste" id="sucheListe"></div>
         <div class="hint">Antippen genügt: Name, Anschrift, Telefon, Fahrzeug, Kennzeichen, Kaution und Mietzeit werden übernommen.</div>
@@ -300,15 +300,15 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
         </div>
         <div class="grid2" style="margin-top:10px">
           <input type="text" id="werkstatt" placeholder="Werkstatt / Aussteller">
-          <input type="text" id="kvnr" placeholder="Beleg-Nr. des KV / der Rechnung">
+          <input type="text" id="kvnr" placeholder="Nummer des Kostenvoranschlags oder der Rechnung">
         </div>
         <div class="grid3" style="margin-top:10px">
           <div>
             <div class="money"><span class="cur">&euro;</span><input type="text" id="schaden" inputmode="decimal" placeholder="Schaden netto"></div>
-            <div class="hint">Netto laut KV bzw. Rechnung</div>
+            <div class="hint">Netto laut Kostenvoranschlag oder Rechnung</div>
           </div>
           <div>
-            <div class="money"><span class="cur">&euro;</span><input type="text" id="kvkosten" inputmode="decimal" placeholder="KV-Kosten"></div>
+            <div class="money"><span class="cur">&euro;</span><input type="text" id="kvkosten" inputmode="decimal" placeholder="Kosten laut Kostenvoranschlag"></div>
             <div class="hint">Nur falls berechnet</div>
           </div>
           <div>
@@ -524,7 +524,7 @@ function textAbrechnung(d) {
   if (d.kau > 0) L.push('Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.');
   L.push('');
   L.push('Wichtig für Sie: Diese Positionen berechnen wir Ihnen bewusst NICHT, obwohl sie uns entstehen:');
-  L.push('- Die Mehrwertsteuer' + (d.schaden > 0 ? ' von ' + fmt(d.schaden * 0.19) : '') + ': Auf der Reparaturrechnung kommen 19 % Mehrwertsteuer oben drauf. Wir fordern von Ihnen nur den Nettobetrag' + (d.schaden > 0 ? ', das spart Ihnen ' + fmt(d.schaden * 0.19) : '') + '.');
+  L.push('- Die Mehrwertsteuer' + (d.schaden > 0 ? ' von ' + fmt(d.schaden * 0.19) : '') + ': Auf der Reparaturrechnung kommen 19 % Mehrwertsteuer obendrauf. Wir fordern von Ihnen nur den Nettobetrag' + (d.schaden > 0 ? ', das spart Ihnen ' + fmt(d.schaden * 0.19) : '') + '.');
   L.push('- Der Wertverlust des Fahrzeugs: Ein repariertes und nachlackiertes Fahrzeug ist beim Verkauf weniger wert. Diesen Wertverlust könnten wir als Schaden geltend machen, tun wir aber nicht.');
   L.push('- Der Mietausfall: Solange das Fahrzeug in der Werkstatt steht, kann es nicht vermietet werden. Die entgangenen Mieteinnahmen für diese Tage berechnen wir Ihnen nicht.');
   L.push('- Unser Aufwand: Organisation der Reparatur, Fahrten, Übergaben und Schriftverkehr kosten Zeit und Geld. Auch dafür berechnen wir Ihnen nichts.');
@@ -665,7 +665,7 @@ function render() {
       : 'Abgerechnet netto auf Grundlage des Kostenvoranschlags (§ 249 Abs. 2 Satz 2 BGB).')
       + (d.kau > 0 ? ' Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.' : '') + '</p>';
     h += '<p class="fett">Wichtig für Sie: Diese Positionen berechnen wir Ihnen bewusst NICHT, obwohl sie uns entstehen:</p><ul>'
-      + '<li><b>Die Mehrwertsteuer' + (d.schaden > 0 ? ' von ' + fmt(d.schaden * 0.19) : '') + ':</b> Auf der Reparaturrechnung kommen 19 % Mehrwertsteuer oben drauf. Wir fordern von Ihnen nur den Nettobetrag' + (d.schaden > 0 ? ', das spart Ihnen ' + fmt(d.schaden * 0.19) : '') + '.</li>'
+      + '<li><b>Die Mehrwertsteuer' + (d.schaden > 0 ? ' von ' + fmt(d.schaden * 0.19) : '') + ':</b> Auf der Reparaturrechnung kommen 19 % Mehrwertsteuer obendrauf. Wir fordern von Ihnen nur den Nettobetrag' + (d.schaden > 0 ? ', das spart Ihnen ' + fmt(d.schaden * 0.19) : '') + '.</li>'
       + '<li><b>Der Wertverlust des Fahrzeugs:</b> Ein repariertes und nachlackiertes Fahrzeug ist beim Verkauf weniger wert. Diesen Wertverlust könnten wir als Schaden geltend machen, tun wir aber nicht.</li>'
       + '<li><b>Der Mietausfall:</b> Solange das Fahrzeug in der Werkstatt steht, kann es nicht vermietet werden. Die entgangenen Mieteinnahmen für diese Tage berechnen wir Ihnen nicht.</li>'
       + '<li><b>Unser Aufwand:</b> Organisation der Reparatur, Fahrten, Übergaben und Schriftverkehr kosten Zeit und Geld. Auch dafür berechnen wir Ihnen nichts.</li></ul>';
