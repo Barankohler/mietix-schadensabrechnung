@@ -134,7 +134,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
   .doc .anschrift { font-size: 13.5px; line-height: 1.55; min-height: 60px; }
   .doc .meta { font-size: 12px; text-align: right; color: #333; }
   .doc .meta b { display: inline-block; min-width: 92px; text-align: left; font-weight: 400; color: #777; }
-  .doc h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .doc h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: -0.01em; hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; }
   .doc .intro { margin: 6px 0 14px; }
   .doc table { width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: 13px; }
   .doc th { text-align: left; border-top: 1.5px solid #222; border-bottom: 1px solid #222; padding: 6px 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -462,6 +462,10 @@ function regZeichnen() {
   el.querySelectorAll('[data-laden]').forEach(btn => btn.onclick = () => {
     const b = regLesen()[+btn.dataset.laden];
     if (!b || !b.felder) return;
+    /* Eingetipptes nicht still überschreiben (31.10.2026) */
+    const nrJetzt = $('nr').value.trim();
+    if (($('name').value.trim() || $('schaden').value.trim()) && nrJetzt !== b.nr &&
+        !confirm('Beleg ' + b.nr + ' laden?\n\nWas du gerade eingetippt hast, wird ersetzt.')) return;
     FELD_IDS.forEach(id => { if (id in b.felder) $(id).value = b.felder[id]; });
     /* Bezugsdaten aus den gespeicherten Stufen, passende naechste Stufe vorwaehlen */
     const st = b.stufen || {};
