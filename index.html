@@ -453,9 +453,9 @@ function regZeichnen() {
       + '<b>' + b.nr + '</b>'
       + '<span class="wer">' + (b.name || 'ohne Name') + '<div class="was">' + deDatum(b.datum) + ', ' + (b.fahrzeug || '') + '</div></span>'
       + '<span>' + fmt(b.offen || 0) + '</span>'
-      + '<span class="badge ' + (b.status || 'offen') + '">' + (b.status || 'offen') + '</span>'
+      + '<select class="badge ' + (b.status || 'offen') + '" data-st="' + i + '" aria-label="Status" style="border:0;font:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:18px;background-image:url(&quot;data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%23666%27 fill=%27none%27 stroke-width=%271.5%27/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center">' + STATUS.map(s => '<option value="' + s + '"' + ((b.status || 'offen') === s ? ' selected' : '') + '>' + s + '</option>').join('') + '</select>'
       + (b.felder ? '<button class="mini" data-laden="' + i + '">Laden</button>' : '')
-      + ((b.status || 'offen') === 'bezahlt' ? '<button class="mini" data-offen="' + i + '">Wieder offen</button>' : '<button class="mini" data-weiter="' + i + '">Status weiter</button>')
+
       + '<button class="mini" data-weg="' + i + '">Löschen</button>'
       + '</div>';
   }).join('');
@@ -479,6 +479,12 @@ function regZeichnen() {
     }
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  // Status direkt wählen (31.10.2026, Baran: antippen statt durchschalten). Von „bezahlt“ zurück nur mit Rückfrage.
+  el.querySelectorAll('select[data-st]').forEach(sel => sel.onchange = () => {
+    const l2 = regLesen(), b = l2[+sel.dataset.st], alt = b.status || 'offen';
+    if (alt === 'bezahlt' && sel.value !== 'bezahlt' && !confirm('Beleg ' + b.nr + ' wirklich wieder auf „' + sel.value + '“ setzen?')) { sel.value = alt; return; }
+    b.status = sel.value; regSchreiben(l2); regZeichnen();
   });
   el.querySelectorAll('[data-weiter]').forEach(btn => btn.onclick = () => {
     const l2 = regLesen(), b = l2[+btn.dataset.weiter];
