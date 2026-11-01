@@ -232,6 +232,31 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 .mxKlein>summary::-webkit-details-marker{display:none}.mxKlein>summary em{font-style:normal;color:#C4161C;font-size:18px;line-height:1;transition:transform .15s}.mxKlein[open]>summary em{transform:rotate(90deg)}
 .mxText{font-size:14px;color:#8A8A8E;font-weight:600;margin:0 0 10px;line-height:1.4}
 @media print{.regKlapp{display:none!important}}
+/* Zeitraum-Zeile und Fertig-Knopf wie im Angebot (1.11.2026) */
+.ztS{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1.5px solid #E4E4E7;border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;font-size:15px;font-weight:800;color:#1C1C1E}
+.ztS span{min-width:0}.ztS u{color:#C4161C;text-decoration:none;font-size:13px;white-space:nowrap}
+.ztFertig{display:block;width:100%;border:0;border-radius:14px;padding:14px;font-weight:800;font-size:16px;font-family:inherit;background:#1C1C1E;color:#fff;margin-top:14px;cursor:pointer}
+
+.mxKnopf,.mxKlapp>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;box-sizing:border-box;background:#fff;border:1.5px solid #E4E4E7;border-radius:16px;padding:14px 16px;min-height:60px;text-align:left;font-family:inherit;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04);color:#1C1C1E;margin:0 0 10px;-webkit-tap-highlight-color:transparent}
+.mxKnopf span,.mxKlapp>summary span{flex:1;min-width:0}
+.mxKnopf b,.mxKlapp>summary b{display:block;font-size:16px;font-weight:800;color:#1C1C1E}
+.mxKnopf i,.mxKlapp>summary i{display:block;font-style:normal;font-size:13px;color:#8A8A8E;margin-top:2px;font-weight:600}
+.mxKnopf em,.mxKlapp>summary em{flex:0 0 auto;font-style:normal;font-size:28px;color:#C4161C;font-weight:700;line-height:1;transition:transform .15s}
+.mxKnopf:active,.mxKlapp>summary:active{background:#F6F6F7}
+.mxKlapp>summary{list-style:none}.mxKlapp>summary::-webkit-details-marker{display:none}
+.mxKlapp[open]>summary{margin-bottom:10px}.mxKlapp[open]>summary em{transform:rotate(90deg)}
+.mxBg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90;display:none}.mxBg.auf{display:block}
+.mxFenster{position:fixed;left:0;right:0;bottom:0;z-index:91;background:#fff;border-radius:22px 22px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:none;box-shadow:0 -10px 30px rgba(0,0,0,.18);margin:0 auto;max-width:560px;box-sizing:border-box;text-align:left}
+.mxFenster.auf{display:block;animation:mxHoch .22s ease-out}.mxBg.auf{animation:mxBlende .2s ease-out}
+@keyframes mxHoch{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}@keyframes mxBlende{from{opacity:0}to{opacity:1}}
+@media(min-width:700px){.mxFenster{top:50%;bottom:auto;transform:translateY(-50%);border-radius:22px;width:calc(100% - 48px);padding:20px}.mxFenster.auf{animation:mxMitte .2s ease-out}}
+@keyframes mxMitte{from{transform:translateY(-46%);opacity:0}to{transform:translateY(-50%);opacity:1}}
+.mxKopf{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.mxKopf h3{font-size:19px;font-weight:900;margin:0;color:#1C1C1E}
+.mxZu{flex:0 0 auto;width:40px;height:40px;border-radius:50%;border:0;background:#F2F2F4;font-size:17px;font-weight:800;cursor:pointer;color:#1C1C1E;font-family:inherit}
+.mxKlein{margin-top:8px}.mxKlein>summary{display:inline-flex;align-items:center;gap:6px;list-style:none;cursor:pointer;font-size:14px;font-weight:800;color:#1C1C1E;background:#F2F2F4;border-radius:999px;padding:9px 14px;min-height:40px;box-sizing:border-box}
+.mxKlein>summary::-webkit-details-marker{display:none}.mxKlein>summary em{font-style:normal;color:#C4161C;font-size:18px;line-height:1;transition:transform .15s}.mxKlein[open]>summary em{transform:rotate(90deg)}
+.mxText{font-size:14px;color:#8A8A8E;font-weight:600;margin:0 0 10px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -304,13 +329,12 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
         <select id="fahrzeugwahl"></select>
         <input type="text" id="fahrzeug" placeholder="Fahrzeug eintragen" style="margin-top:8px;display:none">
         <input type="text" id="kennzeichen" placeholder="Kennzeichen" style="margin-top:8px">
-        <div class="grid2" style="margin-top:8px">
-          <div><p class="sub">Miete von</p><input type="date" id="mietVonD"></div>
-          <div><p class="sub">Uhrzeit</p><input type="time" id="mietVonU"></div>
-        </div>
-        <div class="grid2" style="margin-top:8px">
-          <div><p class="sub">Miete bis</p><input type="date" id="mietBisD"></div>
-          <div><p class="sub">Uhrzeit</p><input type="time" id="mietBisU"></div>
+        <!-- Zeitraum als Fenster wie im Angebot (1.11.2026, Baran); die Felder sind dieselben, sie stehen nur im Fenster -->
+        <div class="ztS" id="ztS" role="button" tabindex="0" style="margin-top:8px"><span id="ztSText">Mietzeit wählen</span><u>ändern</u></div>
+        <div class="mxFenster" id="fZeitS" role="dialog" aria-label="Zeitraum"><div class="mxKopf"><h3>Zeitraum</h3><button class="mxZu" type="button" aria-label="Schließen">✕</button></div>
+          <div class="grid2"><div><p class="sub">Von</p><input type="date" id="mietVonD"></div><div><p class="sub">Uhrzeit</p><input type="time" id="mietVonU"></div></div>
+          <div class="grid2" style="margin-top:8px"><div><p class="sub">Bis</p><input type="date" id="mietBisD"></div><div><p class="sub">Uhrzeit</p><input type="time" id="mietBisU"></div></div>
+          <button class="ztFertig" type="button" onclick="mxZu()">Fertig</button>
         </div>
         <div style="margin-top:8px"><p class="sub">Schadenstag</p><input type="date" id="schadenstag"></div>
       </div>
@@ -1304,6 +1328,27 @@ zeigen();abgleichen();auslagernBald();
 })();
 </script>
 <script>
+/* Fenster (30.10.2026): Knopf mit data-fenster öffnet, ✕, Tipp daneben oder Esc schließt */
+(function(){if(window.mxAuf)return;
+  let bg=document.querySelector(".mxBg");if(!bg){bg=document.createElement("div");bg.className="mxBg";document.body.appendChild(bg)}
+  window.mxAuf=function(id){const f=document.getElementById(id);if(!f)return;mxZu();bg.classList.add("auf");f.classList.add("auf");
+    document.documentElement.style.overflow="hidden";document.body.style.overflow="hidden";f.scrollTop=0};
+  window.mxZu=function(){document.querySelectorAll(".mxFenster.auf").forEach(f=>f.classList.remove("auf"));bg.classList.remove("auf");
+    document.documentElement.style.overflow="";document.body.style.overflow=""};
+  document.addEventListener("click",function(e){const k=e.target.closest("[data-fenster]");if(k){e.preventDefault();mxAuf(k.dataset.fenster);return}
+    if(e.target.closest(".mxZu")||e.target===bg)mxZu()});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")mxZu()})})();
+</script><script>
+/* Zeitraum-Zeile: zeigt die Mietzeit, Tipp öffnet das Fenster (1.11.2026) */
+(function(){const $=id=>document.getElementById(id),WT=["So","Mo","Di","Mi","Do","Fr","Sa"];
+  const t=(d,u)=>{if(!d)return"";const x=new Date(d+"T12:00");return WT[x.getDay()]+" "+d.slice(8,10)+"."+d.slice(5,7)+"."+d.slice(0,4)+(u?", "+u+" Uhr":"")};
+  const zeichne=()=>{const a=t($("mietVonD").value,$("mietVonU").value),b=t($("mietBisD").value,$("mietBisU").value);
+    $("ztSText").textContent=a||b?(a||"?")+" bis "+(b||"?"):"Mietzeit wählen"};
+  ["mietVonD","mietVonU","mietBisD","mietBisU"].forEach(i=>{$(i).addEventListener("input",zeichne);$(i).addEventListener("change",zeichne)});
+  $("ztS").onclick=()=>mxAuf("fZeitS");$("ztS").onkeydown=e=>{if(e.key==="Enter")mxAuf("fZeitS")};
+  document.addEventListener("click",e=>{if(e.target.closest("#fZeitS .mxZu,.mxBg,.ztFertig"))setTimeout(zeichne,0)});
+  zeichne();setTimeout(zeichne,800)})();
+</script><script>
 /* Schutz (1.11.2026, Baran: geht etwas nicht, roter Hinweis mit Grund; alles sofort speichern) */
 (function(){if(window.mxFehler)return;
   const css=document.createElement("style");css.textContent=
