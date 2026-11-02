@@ -598,6 +598,8 @@ function schlussSatz(d) {
   if (!(d.offen > 0.004)) return 'Die Kaution deckt den Schaden genau. Sie müssen nichts bezahlen.';
   return 'Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + d.nr + '.';
 }
+/* Wie das Geld zurückkommt, fragt das Schreiben sanft (02.11.2026, Baran) */
+function rueckFrage(d) { return 'Möchten Sie den Betrag überwiesen bekommen oder lieber in bar? Für eine Überweisung nennen Sie uns bitte einfach kurz Ihre Kontoverbindung.'; }
 function textAbrechnung(d) {
   const L = [];
   L.push('Schadensersatzabrechnung ' + d.nr + (d.datum ? ' vom ' + deDatum(d.datum) : ''));
@@ -626,6 +628,7 @@ function textAbrechnung(d) {
   L.push('- Unser Aufwand: Organisation der Reparatur, Fahrten, Übergaben und Schriftverkehr kosten Zeit und Geld. Auch dafür berechnen wir Ihnen nichts.');
   L.push('');
   L.push(schlussSatz(d));
+  if (d.rueck > 0) L.push(rueckFrage(d));
   return L;
 }
 function textAufstellung(d) {
@@ -767,6 +770,7 @@ function render() {
       + '<li><b>Der Mietausfall:</b> Solange das Fahrzeug in der Werkstatt steht, kann es nicht vermietet werden. Die entgangenen Mieteinnahmen für diese Tage berechnen wir Ihnen nicht.</li>'
       + '<li><b>Unser Aufwand:</b> Organisation der Reparatur, Fahrten, Übergaben und Schriftverkehr kosten Zeit und Geld. Auch dafür berechnen wir Ihnen nichts.</li></ul>';
     h += '<p class="fett' + (d.rueck > 0 ? ' rueck' : '') + '">' + esc(schlussSatz(d)) + '</p>';
+    if (d.rueck > 0) h += '<p>' + esc(rueckFrage(d)) + '</p>';
     h += '<p class="gruss">Mit freundlichen Grüßen<br>Baran Köhler, Mietix Sportwagenvermietung</p>';
   } else if (a === 'erinnerung' || a === 'mahnung') {
     let zeilen = (a === 'erinnerung' ? textErinnerung(d) : textMahnung(d)).slice(2); /* ohne Betreffzeile */
