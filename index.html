@@ -159,6 +159,22 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
   .reg { padding: 10px 20px 20px; }
   .reg-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; flex-wrap: wrap; }
   .reg-row:last-child { border-bottom: 0; }
+  .reg-row { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .reg-betrag { font-weight: 700; white-space: nowrap; margin-left: auto; } .reg-betrag.rueck { color: #1E8E4E; } .reg-pfeil { color: #C7C7CC; font-size: 20px; line-height: 1; }
+  #fallBg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 90; } #fallBg.an { display: block; }
+  #fall { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 91; background: #F2F2F7; border-radius: 22px 22px 0 0; padding: 18px 16px calc(20px + env(safe-area-inset-bottom)); max-height: 88vh; overflow: auto; box-sizing: border-box; }
+  #fall.an { display: block; }
+  @media (min-width: 700px) { #fall { left: 50%; right: auto; bottom: auto; top: 50%; transform: translate(-50%,-50%); width: 480px; border-radius: 22px; } }
+  #fall h3 { margin: 0 44px 2px 0; font-size: 22px; font-weight: 800; } #fall .fnr { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+  #fall .fzu { position: absolute; right: 14px; top: 14px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: #E9E9EE; font-size: 15px; font-weight: 800; cursor: pointer; color: #1C1C1E; }
+  .fergebnis { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #fff; border-radius: 12px; padding: 12px 14px; font-weight: 600; } .fergebnis b { font-size: 20px; font-weight: 800; white-space: nowrap; }
+  .fergebnis.rueck { background: #E3F4EA; color: #1E8E4E; } .fergebnis.offen { background: #FDECEC; color: #C4161C; }
+  .fgk { font-size: 12px; font-weight: 700; color: #6E6E73; text-transform: uppercase; letter-spacing: .4px; margin: 14px 4px 6px; }
+  .fgr { background: #fff; border-radius: 12px; overflow: hidden; } .fgr:empty, .fgk:has(+ .fgr:empty) { display: none; }
+  .fz { display: flex; justify-content: space-between; gap: 14px; padding: 10px 14px; border-top: .5px solid #E5E5EA; font-size: 15px; } .fz:first-child { border-top: 0; }
+  .fz span { color: #6E6E73; flex: 0 0 auto; } .fz b { font-weight: 600; text-align: right; overflow-wrap: anywhere; } .fz b.ja { color: #1E8E4E; } .fz b.nein { color: #C4161C; }
+  .fkn { display: flex; gap: 8px; margin-top: 14px; } .fkn button { flex: 1; border: 0; border-radius: 12px; padding: 13px; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; }
+  .fbear { background: #1C1C1E; color: #fff; } .floesch { background: #E9E9EE; color: #C4161C; }
   .reg-row b { font-variant-numeric: tabular-nums; }
   .reg-row .wer { flex: 1; min-width: 120px; }
   .reg-row .was { color: var(--muted); font-size: 12.5px; }
@@ -232,7 +248,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 .mxKlein{margin-top:8px}.mxKlein>summary{display:inline-flex;align-items:center;gap:6px;list-style:none;cursor:pointer;font-size:14px;font-weight:800;color:#1C1C1E;background:#F2F2F4;border-radius:999px;padding:9px 14px;min-height:40px;box-sizing:border-box}
 .mxKlein>summary::-webkit-details-marker{display:none}.mxKlein>summary em{font-style:normal;color:#C4161C;font-size:18px;line-height:1;transition:transform .15s}.mxKlein[open]>summary em{transform:rotate(90deg)}
 .mxText{font-size:14px;color:#8A8A8E;font-weight:600;margin:0 0 10px;line-height:1.4}
-@media print{.regKlapp{display:none!important}}
+@media print{.regKlapp,#fall,#fallBg{display:none!important}}
 /* Zeitraum-Zeile und Fertig-Knopf wie im Angebot (1.11.2026) */
 .ztS{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1.5px solid #E4E4E7;border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;font-size:15px;font-weight:800;color:#1C1C1E}
 .ztS span{min-width:0}.ztS u{color:#C4161C;text-decoration:none;font-size:13px;white-space:nowrap}
@@ -391,6 +407,8 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
   <section class="panel register">
     <div class="panel-head"><h2>Register</h2><button class="mini" id="regExport">Als Text kopieren</button></div>
     <div class="reg" id="regListe"></div>
+    <div id="fallBg" onclick="fallZu()"></div>
+    <div id="fall" role="dialog" aria-label="Fall"><button type="button" class="fzu" onclick="fallZu()" aria-label="Schließen">✕</button><div id="fallInhalt"></div></div>
   </section></details>
   </div>
 
@@ -470,23 +488,45 @@ function naechsteNummer() {
   return 'SA-' + jahr + '-' + String(max + 1).padStart(3, '0');
 }
 const STATUS = ['offen', 'erinnert', 'gemahnt', 'inkasso', 'bezahlt'];
+/* Betrag eines Falls, auch für ältere Einträge aus den gespeicherten Feldern */
+function fallBetrag(b) { const f = b.felder || {};
+  if (!b.felder) return { offen: b.offen || 0, rueck: b.rueck || 0 };
+  const diff = parseNum(f.schaden) + parseNum(f.kvkosten) - parseNum(f.kaution);
+  return { offen: Math.max(0, diff), rueck: diff < -0.004 ? -diff : 0 }; }
+function fallAuf(i) { const b = regLesen()[i]; if (!b) return; const f = b.felder || {}, erg = fallBetrag(b), st = b.stufen || {};
+  const z = (t, w) => w ? '<div class="fz"><span>' + t + '</span><b>' + esc(w) + '</b></div>' : '';
+  const miet = f.mietVonD ? zeitText(f.mietVonD, f.mietVonU) + (f.mietBisD ? ' bis ' + zeitText(f.mietBisD, f.mietBisU) : '') : '';
+  const stufe = (t, d) => '<div class="fz"><span>' + t + '</span><b class="' + (d ? 'ja' : 'nein') + '">' + (d ? '✓ ' + deDatum(d) : '✕ noch nicht') + '</b></div>';
+  const sch = parseNum(f.schaden), kv = parseNum(f.kvkosten), kau = parseNum(f.kaution);
+  $('fallInhalt').innerHTML = '<h3>' + esc(b.name || 'ohne Name') + '</h3><div class="fnr">' + esc(b.nr) + (b.datum ? ', ' + deDatum(b.datum) : '') + '</div>'
+    + '<div class="fergebnis' + (erg.rueck > 0 ? ' rueck' : erg.offen > 0.004 ? ' offen' : '') + '"><span>' + (erg.rueck > 0 ? 'Rückzahlung an den Kunden' : 'Offener Betrag') + '</span><b>' + fmt(erg.rueck > 0 ? erg.rueck : erg.offen) + '</b></div>'
+    + '<div class="fgk">Kunde</div><div class="fgr">' + z('Name', f.name || b.name) + z('Anschrift', [f.strasse, f.ort].filter(Boolean).join(', ')) + z('Telefon', f.tel) + z('Kundennr.', f.kundennr) + '</div>'
+    + '<div class="fgk">Fahrzeug und Schaden</div><div class="fgr">' + z('Fahrzeug', [f.fahrzeug, f.kennzeichen].filter(Boolean).join(', ') || b.fahrzeug) + z('Mietzeit', miet) + z('Schadenstag', f.schadenstag ? deDatum(f.schadenstag) : '') + z('Werkstatt', f.werkstatt) + z('Beleg-Nr. Werkstatt', f.kvnr) + '</div>'
+    + (b.felder ? '<div class="fgk">Beträge</div><div class="fgr">' + z('Schaden netto', fmt(sch)) + (kv > 0 ? z('Gebühr Kostenvoranschlag', fmt(kv)) : '') + z('Kaution', fmt(kau)) + '</div>' : '')
+    + '<div class="fgk">Schreiben</div><div class="fgr">' + stufe('Abrechnung', st.abrechnung) + stufe('1. Mahnung', st.erinnerung) + stufe('2. Mahnung', st.mahnung) + stufe('Inkasso', st.inkasso) + '</div>'
+    + '<div class="fkn">' + (b.felder ? '<button type="button" class="fbear" id="fallBear">Bearbeiten</button>' : '') + '<button type="button" class="floesch" id="fallWeg">Löschen</button></div>';
+  const be = $('fallBear'); if (be) be.onclick = () => { fallZu(); window.fallLaden(i); };
+  $('fallWeg').onclick = () => { fallZu(); fallLoeschen(i); };
+  if ($('fall').parentNode !== document.body) { document.body.appendChild($('fallBg')); document.body.appendChild($('fall')); }   /* unabhängig vom zugeklappten Register */
+  $('fallBg').classList.add('an'); $('fall').classList.add('an'); }
+function fallZu() { $('fallBg').classList.remove('an'); $('fall').classList.remove('an'); }
 function regZeichnen() {
   const l = regLesen(), el = $('regListe');
   if (!l.length) { el.innerHTML = '<div class="reg-leer">Noch keine Belege. Der erste gespeicherte Beleg eröffnet den Nummernkreis.</div>'; return; }
   el.innerHTML = l.slice().reverse().map(b => {
     const i = l.indexOf(b);
-    return '<div class="reg-row">'
+    const erg = fallBetrag(b);
+    return '<div class="reg-row" data-fall="' + i + '">'
       + '<b>' + b.nr + '</b>'
       + '<span class="wer">' + (b.name || 'ohne Name') + '<div class="was">' + deDatum(b.datum) + ', ' + (b.fahrzeug || '') + '</div></span>'
-      + '<span>' + (b.rueck > 0 ? 'zurück ' + fmt(b.rueck) : fmt(b.offen || 0)) + '</span>'
+      + '<span class="reg-betrag' + (erg.rueck > 0 ? ' rueck' : '') + '">' + (erg.rueck > 0 ? 'zurück ' + fmt(erg.rueck) : fmt(erg.offen)) + '</span><span class="reg-pfeil">›</span>'
       + '<select class="badge ' + (b.status || 'offen') + '" data-st="' + i + '" aria-label="Status" style="border:0;font:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:18px;background-image:url(&quot;data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%23666%27 fill=%27none%27 stroke-width=%271.5%27/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center">' + STATUS.map(s => '<option value="' + s + '"' + ((b.status || 'offen') === s ? ' selected' : '') + '>' + s + '</option>').join('') + '</select>'
-      + (b.felder ? '<button class="mini" data-laden="' + i + '">Laden</button>' : '')
-
-      + '<button class="mini" data-weg="' + i + '">Löschen</button>'
       + '</div>';
   }).join('');
-  el.querySelectorAll('[data-laden]').forEach(btn => btn.onclick = () => {
-    const b = regLesen()[+btn.dataset.laden];
+  // Fall öffnen: ein Tipp auf die Zeile zeigt alle Infos (02.11.2026, Baran: „man kann dort gar keine Informationen wieder einsehen“)
+  el.querySelectorAll('[data-fall]').forEach(z => z.onclick = e => { if (e.target.closest('select')) return; fallAuf(+z.dataset.fall); });
+  const fallLaden = i => {
+    const b = regLesen()[i];
     if (!b || !b.felder) return;
     /* Eingetipptes nicht still überschreiben (31.10.2026) */
     const nrJetzt = $('nr').value.trim();
@@ -498,7 +538,7 @@ function regZeichnen() {
     if (st.abrechnung) $('abrDatum').value = st.abrechnung;
     if (st.erinnerung) $('erinDatum').value = st.erinnerung;
     if (st.mahnung) $('mahnDatum').value = st.mahnung;
-    const naechste = st.mahnung ? 'inkasso' : st.erinnerung ? 'mahnung' : st.abrechnung ? 'erinnerung' : 'abrechnung';
+    const naechste = fallBetrag(b).offen > 0.004 ? (st.mahnung ? 'inkasso' : st.erinnerung ? 'mahnung' : st.abrechnung ? 'erinnerung' : 'abrechnung') : 'abrechnung';   /* nichts offen: keine Mahnung */
     document.querySelector('#artSeg input[value="' + naechste + '"]').checked = true;
     $('datum').value = isoHeute(0);
     $('frist').value = isoHeute(naechste === 'abrechnung' ? 14 : 7);
@@ -509,7 +549,8 @@ function regZeichnen() {
     }
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
+  };
+  window.fallLaden = fallLaden;
   // Status direkt wählen (31.10.2026, Baran: antippen statt durchschalten). Von „bezahlt“ zurück nur mit Rückfrage.
   el.querySelectorAll('select[data-st]').forEach(sel => sel.onchange = () => {
     const l2 = regLesen(), b = l2[+sel.dataset.st], alt = b.status || 'offen';
@@ -526,13 +567,13 @@ function regZeichnen() {
     if (!confirm('Beleg ' + b.nr + ' wieder auf offen setzen?')) return;
     b.status = 'offen'; regSchreiben(l2); regZeichnen();
   });
-  el.querySelectorAll('[data-weg]').forEach(btn => btn.onclick = () => {
+  window.fallLoeschen = i => {
     if (!confirm('Beleg wirklich aus dem Register löschen?')) return;
-    const l2 = regLesen(), weg = l2.splice(+btn.dataset.weg, 1)[0];
+    const l2 = regLesen(), weg = l2.splice(i, 1)[0];
     try { const pk = JSON.parse(localStorage.getItem('mietixPapierkorb') || '[]') || []; pk.push({ id: 'schadensbeleg:' + Date.now(), ablage: 'schadensbelege', schluessel: weg.nr, eintrag: weg, zeit: new Date().toISOString(), text: 'Schadensbeleg ' + weg.nr + ' ' + (weg.name || '') }); localStorage.setItem('mietixPapierkorb', JSON.stringify(pk)); } catch (e) {}
     try { const alt = JSON.parse(localStorage.getItem(REGKEY) || '[]') || []; localStorage.setItem(REGKEY, JSON.stringify(alt.filter(x => x.nr !== weg.nr))); } catch (e) {}
     regSchreiben(l2); regZeichnen();
-  });
+  };
 }
 $('regExport').onclick = async function () {
   const t = regLesen().map(b => [b.nr, deDatum(b.datum), b.name, b.fahrzeug, fmt(b.offen || 0), b.status || 'offen'].join('  |  ')).join('\n')
