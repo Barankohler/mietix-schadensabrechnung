@@ -141,6 +141,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
   .doc td { border-bottom: 1px solid #DDD; padding: 8px; vertical-align: top; }
   .doc td.r, .doc th.r { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .doc tr.summe td { border-top: 1.5px solid #222; border-bottom: 3px double #222; font-weight: 700; font-size: 14px; }
+  .doc tr.summe.rueck td, .doc p.rueck { color: #1E8E4E; }
   .doc .pos-sub { color: #555; font-size: 12px; }
   .doc p { margin: 0 0 10px; }
   .doc .fett { font-weight: 700; }
@@ -367,7 +368,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
           <span class="lbl">Offener Betrag</span>
           <span class="val" id="restVal">0,00 &euro;</span>
         </div>
-        <div class="note" id="note">Die Kaution deckt den Schaden vollständig. Für die Rückzahlung das Schadensformular nutzen, hier gibt es nichts zu fordern.</div>
+        <div class="note" id="note">Die Kaution deckt den Schaden. Der Kunde bekommt den Rest zurück, das steht so im Schreiben.</div>
         <div class="hint" style="margin-top:10px">Wichtig: Hier läuft nur echter Schadensersatz (ohne Umsatzsteuer, eigener SA-Nummernkreis). Miete, Mehrkilometer und andere Leistungen laufen wie gewohnt als Rechnung über Lexware.</div>
       </div>
 
@@ -477,7 +478,7 @@ function regZeichnen() {
     return '<div class="reg-row">'
       + '<b>' + b.nr + '</b>'
       + '<span class="wer">' + (b.name || 'ohne Name') + '<div class="was">' + deDatum(b.datum) + ', ' + (b.fahrzeug || '') + '</div></span>'
-      + '<span>' + fmt(b.offen || 0) + '</span>'
+      + '<span>' + (b.rueck > 0 ? 'zurück ' + fmt(b.rueck) : fmt(b.offen || 0)) + '</span>'
       + '<select class="badge ' + (b.status || 'offen') + '" data-st="' + i + '" aria-label="Status" style="border:0;font:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:18px;background-image:url(&quot;data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%23666%27 fill=%27none%27 stroke-width=%271.5%27/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center">' + STATUS.map(s => '<option value="' + s + '"' + ((b.status || 'offen') === s ? ' selected' : '') + '>' + s + '</option>').join('') + '</select>'
       + (b.felder ? '<button class="mini" data-laden="' + i + '">Laden</button>' : '')
 
@@ -553,6 +554,7 @@ function daten() {
   return {
     schaden, kvk, kau, forderung, diff,
     offen: Math.max(0, diff),
+    rueck: diff < -0.004 ? -diff : 0,   /* Kaution größer als der Schaden: der Kunde bekommt den Rest zurück (02.11.2026, Baran) */
     nr: $('nr').value.trim() || naechsteNummer(),
     datum: $('datum').value, frist: $('frist').value,
     abrDatum: $('abrDatum').value, erinDatum: $('erinDatum').value, mahnDatum: $('mahnDatum').value,
@@ -582,6 +584,20 @@ function anrede(d) { return d.name ? 'Guten Tag ' + d.name + ',' : 'Sehr geehrte
 function empathie(d) {
   return 'es ist schade, dass es zu diesem Schaden gekommen ist, eine solche Nachricht ist nie angenehm. Deshalb möchten wir die Abwicklung so transparent und fair wie möglich gestalten: Die Schadenshöhe haben nicht wir festgelegt, sie wurde ' + (d.nachRechnung ? 'von der Werkstatt mit ihrer Rechnung ermittelt' : 'von dritter Seite nach den Kalkulationsvorgaben des Herstellers ermittelt') + '. Wir verdienen an diesem Schaden nichts und geben ausschließlich die tatsächlichen Kosten weiter.';
 }
+/* Drei Fälle: Rückzahlung, genau gedeckt, offener Betrag (02.11.2026, Baran: „dass man sieht, dass er Geld zurückbekommt“) */
+function kautionZeile(d) { return d.rueck > 0 ? 'Hinterlegte Kaution' : 'Einbehaltene Kaution, verrechnet'; }
+function summeLabel(d) { return d.rueck > 0 ? 'Rückzahlung an Sie' : 'Offener Betrag'; }
+function kautionSatz(d) {
+  if (!(d.kau > 0)) return '';
+  return d.rueck > 0
+    ? 'Von Ihrer Kaution über ' + fmt(d.kau) + ' verrechnen wir ' + fmt(d.forderung) + '. Den Rest von ' + fmt(d.rueck) + ' bekommen Sie zurück.'
+    : 'Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.';
+}
+function schlussSatz(d) {
+  if (d.rueck > 0) return 'Rückzahlung an Sie: ' + fmt(d.rueck) + '. Sie müssen nichts bezahlen.';
+  if (!(d.offen > 0.004)) return 'Die Kaution deckt den Schaden genau. Sie müssen nichts bezahlen.';
+  return 'Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + d.nr + '.';
+}
 function textAbrechnung(d) {
   const L = [];
   L.push('Schadensersatzabrechnung ' + d.nr + (d.datum ? ' vom ' + deDatum(d.datum) : ''));
@@ -594,14 +610,14 @@ function textAbrechnung(d) {
   L.push('');
   L.push('Schadensersatz nach ' + belegQuelle(d) + ' (netto): ' + fmt(d.schaden));
   if (d.kvk > 0) L.push('Kosten der Erstellung des Kostenvoranschlags: ' + fmt(d.kvk));
-  L.push('Einbehaltene Kaution, verrechnet: -' + fmt(d.kau).replace('-', ''));
-  L.push('Offener Betrag: ' + fmt(d.offen));
+  L.push(kautionZeile(d) + ': -' + fmt(d.kau).replace('-', ''));
+  L.push(summeLabel(d) + ': ' + fmt(d.rueck > 0 ? d.rueck : d.offen));
   L.push('');
   L.push('Keine Umsatzsteuer: Es handelt sich um echten Schadensersatz, keine umsatzsteuerbare Leistung. Dieser Beleg ist keine Rechnung im Sinne des § 14 UStG.');
   L.push(d.nachRechnung
     ? 'Abgerechnet netto: Die Reparatur wurde durchgeführt, als vorsteuerabzugsberechtigtes Unternehmen fordern wir nur den Nettobetrag.'
     : 'Abgerechnet netto auf Grundlage des Kostenvoranschlags (§ 249 Abs. 2 Satz 2 BGB).');
-  if (d.kau > 0) L.push('Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.');
+  if (d.kau > 0) L.push(kautionSatz(d));
   L.push('');
   L.push('Wichtig für Sie: Diese Positionen berechnen wir Ihnen bewusst NICHT, obwohl sie uns entstehen:');
   L.push('- Die Mehrwertsteuer' + (d.schaden > 0 ? ' von ' + fmt(d.schaden * 0.19) : '') + ': Auf der Reparaturrechnung kommen 19 % Mehrwertsteuer obendrauf. Wir fordern von Ihnen nur den Nettobetrag' + (d.schaden > 0 ? ', das spart Ihnen ' + fmt(d.schaden * 0.19) : '') + '.');
@@ -609,7 +625,7 @@ function textAbrechnung(d) {
   L.push('- Der Mietausfall: Solange das Fahrzeug in der Werkstatt steht, kann es nicht vermietet werden. Die entgangenen Mieteinnahmen für diese Tage berechnen wir Ihnen nicht.');
   L.push('- Unser Aufwand: Organisation der Reparatur, Fahrten, Übergaben und Schriftverkehr kosten Zeit und Geld. Auch dafür berechnen wir Ihnen nichts.');
   L.push('');
-  L.push('Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + d.nr + '.');
+  L.push(schlussSatz(d));
   return L;
 }
 function textAufstellung(d) {
@@ -690,10 +706,10 @@ function tabelleHTML(d) {
     + '<div class="pos-sub">' + esc(belegQuelle(d)) + ', netto</div></td>'
     + '<td class="r">' + fmt(d.schaden) + '</td></tr>';
   if (d.kvk > 0) h += '<tr><td>' + (pos++) + '</td><td>Kosten der Erstellung des Kostenvoranschlags</td><td class="r">' + fmt(d.kvk) + '</td></tr>';
-  h += '<tr><td>' + (pos++) + '</td><td>Einbehaltene Kaution, verrechnet'
+  h += '<tr><td>' + (pos++) + '</td><td>' + kautionZeile(d)
     + '<div class="pos-sub">' + (d.mietvon ? 'Mietzeit ' + esc(d.mietvon) + (d.mietbis ? ' bis ' + esc(d.mietbis) : '') : '') + '</div></td>'
     + '<td class="r">-' + fmt(d.kau).replace('-', '') + '</td></tr>';
-  h += '<tr class="summe"><td></td><td>Offener Betrag</td><td class="r">' + fmt(d.offen) + '</td></tr></table>';
+  h += '<tr class="summe' + (d.rueck > 0 ? ' rueck' : '') + '"><td></td><td>' + summeLabel(d) + '</td><td class="r">' + fmt(d.rueck > 0 ? d.rueck : d.offen) + '</td></tr></table>';
   return h;
 }
 
@@ -744,13 +760,13 @@ function render() {
     h += '<p>' + (d.nachRechnung
       ? 'Abgerechnet netto: Die Reparatur wurde durchgeführt, als vorsteuerabzugsberechtigtes Unternehmen fordern wir nur den Nettobetrag.'
       : 'Abgerechnet netto auf Grundlage des Kostenvoranschlags (§ 249 Abs. 2 Satz 2 BGB).')
-      + (d.kau > 0 ? ' Die Kaution von ' + fmt(d.kau) + ' ist mit dieser Abrechnung vollständig verrechnet.' : '') + '</p>';
+      + (d.kau > 0 ? ' ' + kautionSatz(d) : '') + '</p>';
     h += '<p class="fett">Wichtig für Sie: Diese Positionen berechnen wir Ihnen bewusst NICHT, obwohl sie uns entstehen:</p><ul>'
       + '<li><b>Die Mehrwertsteuer' + (d.schaden > 0 ? ' von ' + fmt(d.schaden * 0.19) : '') + ':</b> Auf der Reparaturrechnung kommen 19 % Mehrwertsteuer obendrauf. Wir fordern von Ihnen nur den Nettobetrag' + (d.schaden > 0 ? ', das spart Ihnen ' + fmt(d.schaden * 0.19) : '') + '.</li>'
       + '<li><b>Der Wertverlust des Fahrzeugs:</b> Ein repariertes und nachlackiertes Fahrzeug ist beim Verkauf weniger wert. Diesen Wertverlust könnten wir als Schaden geltend machen, tun wir aber nicht.</li>'
       + '<li><b>Der Mietausfall:</b> Solange das Fahrzeug in der Werkstatt steht, kann es nicht vermietet werden. Die entgangenen Mieteinnahmen für diese Tage berechnen wir Ihnen nicht.</li>'
       + '<li><b>Unser Aufwand:</b> Organisation der Reparatur, Fahrten, Übergaben und Schriftverkehr kosten Zeit und Geld. Auch dafür berechnen wir Ihnen nichts.</li></ul>';
-    h += '<p class="fett">Offener Betrag: ' + fmt(d.offen) + (d.frist ? ', zahlbar bis ' + deDatum(d.frist) : '') + ' auf das unten genannte Konto. Verwendungszweck: ' + esc(d.nr) + '.</p>';
+    h += '<p class="fett' + (d.rueck > 0 ? ' rueck' : '') + '">' + esc(schlussSatz(d)) + '</p>';
     h += '<p class="gruss">Mit freundlichen Grüßen<br>Baran Köhler, Mietix Sportwagenvermietung</p>';
   } else if (a === 'erinnerung' || a === 'mahnung') {
     let zeilen = (a === 'erinnerung' ? textErinnerung(d) : textMahnung(d)).slice(2); /* ohne Betreffzeile */
@@ -845,7 +861,7 @@ $('saveBtn').addEventListener('click', () => {
   FELD_IDS.forEach(id => { felder[id] = $(id).value; });
   const eintrag = {
     nr: d.nr, datum: d.datum || isoHeute(0), name: d.name, fahrzeug: fzText(d),
-    offen: d.offen, status: status,
+    offen: d.offen, rueck: d.rueck, status: status,
     stufen: Object.assign({}, alt > -1 ? (l[alt].stufen || {}) : {}, (() => { const o = {}; o[a] = d.datum || isoHeute(0); return o; })()),
     felder: felder,
   };
