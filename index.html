@@ -70,7 +70,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
   label .opt { color: var(--muted); font-weight: 400; }
   .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
 
-  input[type="text"], input[type="date"], textarea, select {
+  input[type="text"], input:not([type]), input[type="date"], input[type="time"], textarea, select {
     width: 100%;
     font: inherit;
     color: var(--ink);
@@ -93,7 +93,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 
   .money { position: relative; }
   .money .cur { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 600; pointer-events: none; }
-  .money input { padding-left: 26px; font-variant-numeric: tabular-nums; }
+  .money input { font-variant-numeric: tabular-nums; }
 
   .rest {
     margin-top: 16px; background: var(--ink); color: #fff; border-radius: 10px;
@@ -207,7 +207,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
     display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; z-index: 20;
   }
   button.act {
-    font: inherit; font-weight: 600; border-radius: 10px; padding: 12px 18px;
+    font: inherit; font-weight: 600; border-radius: 10px; padding: 12px 18px; min-height: 54px;
     border: 1px solid transparent; cursor: pointer;
     display: inline-flex; align-items: center; gap: 8px;
     transition: transform .08s, background .12s, border-color .12s;
@@ -215,9 +215,10 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
   button.act:active { transform: translateY(1px); }
   .btn-main { background: var(--accent); color: #fff; }
   .btn-main:hover { background: var(--accent-dark); }
-  .btn-copy { background: var(--ink); color: #fff; }
-  .btn-copy:hover { background: #000; }
-  .btn-copy.done { background: var(--good); }
+  .btn-copy { background: #FDECEC; color: #C4161C; }
+  .btn-copy:hover { background: #FBDADA; }
+  .btn-copy.done { background: var(--good); color: #fff; }
+  #waBtn { background: #25D366; color: #fff; border-color: #25D366; }
   .btn-ghost { background: #fff; color: var(--ink); border-color: var(--line-strong); }
   .btn-ghost:hover { border-color: var(--muted); }
   svg.ic { width: 18px; height: 18px; }
@@ -252,7 +253,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 /* Zeitraum-Zeile und Fertig-Knopf wie im Angebot (1.11.2026) */
 .ztS{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1.5px solid #E4E4E7;border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;font-size:15px;font-weight:800;color:#1C1C1E}
 .ztS span{min-width:0}.ztS u{color:#C4161C;text-decoration:none;font-size:13px;white-space:nowrap}
-.ztFertig{display:block;width:100%;border:0;border-radius:14px;padding:14px;font-weight:800;font-size:16px;font-family:inherit;background:#1C1C1E;color:#fff;margin-top:14px;cursor:pointer}
+.ztFertig{display:block;width:100%;border:0;border-radius:14px;padding:14px;font-weight:800;font-size:16px;font-family:inherit;background:#C4161C;color:#fff;margin-top:14px;cursor:pointer}
 
 .mxKnopf,.mxKlapp>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;box-sizing:border-box;background:#fff;border:1.5px solid #E4E4E7;border-radius:16px;padding:14px 16px;min-height:60px;text-align:left;font-family:inherit;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04);color:#1C1C1E;margin:0 0 10px;-webkit-tap-highlight-color:transparent}
 .mxKnopf span,.mxKlapp>summary span{flex:1;min-width:0}
@@ -275,8 +276,49 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 .mxKlein>summary::-webkit-details-marker{display:none}.mxKlein>summary em{font-style:normal;color:#C4161C;font-size:18px;line-height:1;transition:transform .15s}.mxKlein[open]>summary em{transform:rotate(90deg)}
 .mxText{font-size:14px;color:#8A8A8E;font-weight:600;margin:0 0 10px;line-height:1.4}
 </style>
-</head>
-<body>
+<style>
+/* Knopf-Paar je Nachricht (02.11.2026) */
+.nkPaar{display:flex;justify-content:flex-end;gap:6px;margin-top:6px;flex:1 0 100%}
+.nkPaar button{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 11px;border:0;border-radius:999px;font-family:inherit;font-size:13px;font-weight:700;line-height:1;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;margin:0;width:auto;min-height:0;box-shadow:none}
+.nkPaar button svg{width:14px;height:14px;flex:0 0 auto}
+.nkPaar .nkWa{background:#E3F4EA!important;color:#1E8E4E!important}.nkPaar .nkKo{background:#FDECEC!important;color:#C4161C!important}
+.nkPaar button:active{opacity:.7}
+.nkPaar.gross{justify-content:stretch;gap:8px;margin-top:0}.nkPaar.gross button{flex:1;justify-content:center;height:46px;font-size:16px;border-radius:14px}
+.nkPaar.gross .nkWa{background:#25D366!important;color:#fff!important}.nkPaar.gross .nkKo{background:#FDECEC!important;color:#C4161C!important}
+.nkPaar.gross button svg{width:18px;height:18px}
+#nkMeld{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-10px);background:#1E8E4E;color:#fff;font:700 15px -apple-system,"SF Pro Text",system-ui,sans-serif;border-radius:999px;padding:9px 16px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:99999;white-space:nowrap}
+#nkMeld.an{opacity:1;transform:translateX(-50%) translateY(0)}
+</style></head>
+<body><script>
+/* Knopf-Paar je Nachricht: WhatsApp und Kopieren (02.11.2026) */
+(function(){if(window.nkPaar)return;
+  // Preise ohne Internet (05.11.2026): jede geladene Preisdatei bleibt auf dem Gerät, ohne Netz oder nach 6 Sekunden Warten gilt die letzte (Tiefgarage)
+  {const netz=window.fetch,K="mietixPreisKopie";window.fetch=function(u,o){const s=typeof u==="string"?u:(u&&u.url)||"";if(s.indexOf("mietix-preise/preise.json")<0)return netz.apply(this,arguments);
+    const kopie=()=>{try{const t=localStorage.getItem(K);return t?new Response(t,{status:200,headers:{"Content-Type":"application/json"}}):null}catch(e){return null}};
+    return new Promise((ok,nein)=>{let da=false;const uhr=setTimeout(()=>{const k=kopie();if(k&&!da){da=true;ok(k)}},6000);
+      netz.call(window,u,o).then(r=>{clearTimeout(uhr);if(r.ok){r.clone().text().then(t=>{try{if(t&&t.charAt(0)==="{"&&localStorage.getItem(K)!==t)localStorage.setItem(K,t)}catch(e){}}).catch(()=>{});if(!da){da=true;ok(r)}return}
+        const k=kopie();if(!da){da=true;ok(k||r)}}).catch(e=>{clearTimeout(uhr);const k=kopie();if(da)return;da=true;if(k)ok(k);else nein(e)})})}}
+  const SWA='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>';
+  const SKO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h2"/></svg>';
+  window.nkPaar=function(art){return'<span class="nkPaar'+(art?" "+art:"")+'"><button type="button" class="nkWa" data-nk="wa">'+SWA+'WhatsApp</button><button type="button" class="nkKo" data-nk="ko">'+SKO+'Kopieren</button></span>'};
+  // Eine Regel für alle Seiten (05.11.2026): + und 00 = Ländervorwahl steht schon da, 0 = deutsche Nummer, 15x/16x/17x ohne 0 = deutsches Handy
+  window.nkNummer=function(t){let n=String(t||"").replace(/\D/g,"");if(!n)return"";if(!String(t||"").trim().startsWith("+")){if(n.startsWith("00"))n=n.slice(2);else if(n.startsWith("0"))n="49"+n.slice(1);else if(/^1[567]\d{8,9}$/.test(n))n="49"+n}return n.replace(/^490/,"49")};
+  // Baran 05.11.2026: keine Anrede am Anfang, kein Gruß am Ende, in jeder Nachricht. Auch selbst gespeicherte Texte laufen hier durch.
+  window.nkOhneGruss=function(t){let s=String(t||"").replace(/^\s*(?:Hallo|Hi|Moin|Guten Tag|Guten Morgen|Guten Abend|Sehr geehrte[^\n,]*|Liebe[rs]?\b[^\n,]*)(?:\s+[^\s,!\n]+){0,2}\s*[,!]\s*/,"").replace(/\s*\n\s*(?:Viele|Liebe|Beste|Freundliche|Mit freundlichen)\s+Grüßen?\s*(?:\n[^\n]*)?\s*$/,"").replace(/\s*\n\s*(?:Ihr|Euer)\s+Mietix[- ]Team\s*$/,"").trim();return s?s.charAt(0).toUpperCase()+s.slice(1):s};
+  window.nkWa=function(tel,text){const n=nkNummer(tel);window.open("https://wa.me/"+(n&&n.length>=8?n:"")+"?text="+encodeURIComponent(nkOhneGruss(text)),"_blank")};
+  function meld(t){let m=document.getElementById("nkMeld");if(!m){m=document.createElement("div");m.id="nkMeld";m.setAttribute("role","status");document.body.appendChild(m)}
+    m.textContent=t;m.classList.add("an");clearTimeout(meld.z);meld.z=setTimeout(()=>m.classList.remove("an"),1800)}
+  window.nkMeldung=meld;
+  window.nkKopieren=async function(text){text=nkOhneGruss(text);let ok=false;try{await navigator.clipboard.writeText(text);ok=true}catch(e){}
+    if(!ok){try{const a=document.createElement("textarea");a.value=text;a.setAttribute("readonly","");a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();ok=document.execCommand("copy");a.remove()}catch(e){}}
+    meld(ok?"✓ Kopiert":"Kopieren ging nicht, bitte Text lange antippen");return ok};
+  // beide Knöpfe in el verbinden; textFn liefert den Text erst beim Tippen, nachher(art) z. B. zum Merken „gesendet“
+  window.nkVerbinden=function(el,tel,textFn,nachher){if(!el)return;const w=el.querySelector('[data-nk="wa"]'),k=el.querySelector('[data-nk="ko"]');
+    const tx=()=>typeof textFn==="function"?textFn():String(textFn||""),tl=()=>typeof tel==="function"?tel():tel;
+    if(w)w.onclick=e=>{e.preventDefault();e.stopPropagation();nkWa(tl(),tx());if(nachher)nachher("wa")};
+    if(k)k.onclick=async e=>{e.preventDefault();e.stopPropagation();const ok=await nkKopieren(tx());if(ok&&nachher)nachher("ko")}};
+})();
+</script>
 
 <div class="topbar">
   <span class="brand">Mietix<span class="dot">.</span></span>
@@ -368,15 +410,15 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
         </div>
         <div class="grid3" style="margin-top:10px">
           <div>
-            <div class="money"><span class="cur">&euro;</span><input type="text" id="schaden" inputmode="decimal" placeholder="Schaden netto"></div>
+            <div class="money"><input type="text" id="schaden" data-einheit="€" inputmode="decimal" placeholder="Schaden netto"></div>
             <div class="hint">Netto laut Kostenvoranschlag oder Rechnung</div>
           </div>
           <div>
-            <div class="money"><span class="cur">&euro;</span><input type="text" id="kvkosten" inputmode="decimal" placeholder="Gebühr"></div>
+            <div class="money"><input type="text" id="kvkosten" data-einheit="€" inputmode="decimal" placeholder="Gebühr"></div>
             <div class="hint">Was der Kostenvoranschlag selbst gekostet hat. Leer, wenn kostenlos.</div>
           </div>
           <div>
-            <div class="money"><span class="cur">&euro;</span><input type="text" id="kaution" inputmode="decimal" placeholder="Kaution"></div>
+            <div class="money"><input type="text" id="kaution" data-einheit="€" inputmode="decimal" placeholder="Kaution"></div>
             <div class="hint">Einbehaltene Kaution</div>
           </div>
         </div>
@@ -424,13 +466,13 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
     In Register speichern
   </button>
-  <button class="act btn-copy" id="copyBtn">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-    Text kopieren
-  </button>
   <button class="act btn-ghost" id="waBtn">
     <svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Z"/></svg>
     WhatsApp
+  </button>
+  <button class="act btn-copy" id="copyBtn">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+    Kopieren
   </button>
   <button class="act btn-ghost" id="printBtn">
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/></svg>
@@ -861,10 +903,16 @@ function plainText() {
   if (art() !== 'inkasso') L.push('', 'Mit freundlichen Grüßen', 'Baran Köhler, Mietix Sportwagenvermietung');
   return L.join('\n');
 }
+/* Nachricht an den Kunden: ohne Anrede und Gruß, beginnt groß (Baran 05.11.2026). Das Blatt und das Inkasso-Schreiben bleiben, wie sie sind. */
+function kundenText() {
+  const t = plainText(); if (art() === 'inkasso') return t;
+  const s = t.replace(anrede(daten()), '').replace(/\n*Mit freundlichen Grüßen\n[^\n]*\s*$/, '').trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
 $('copyBtn').addEventListener('click', async () => {
   const btn = $('copyBtn');
-  try { await navigator.clipboard.writeText(plainText()); }
-  catch (e) { const ta = document.createElement('textarea'); ta.value = plainText(); document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  try { await navigator.clipboard.writeText(kundenText()); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = kundenText(); document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
   const old = btn.innerHTML;
   btn.classList.add('done');
   btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Kopiert';
@@ -883,9 +931,9 @@ function waBtnStand() { const b = $('waBtn'); if (b) b.style.display = art() ===
 document.addEventListener('change', e => { if (e.target.closest && e.target.closest('#artSeg')) waBtnStand(); });
 $('waBtn').addEventListener('click', () => {
   if (art() === 'inkasso' || nichtsOffen()) return;
-  const txt = encodeURIComponent(plainText().replace(anrede(daten()), '').replace(/\n*Mit freundlichen Grüßen\n[^\n]*\s*$/, '').trim());   /* WhatsApp ohne Anrede und Gruß (Baran 05.11.2026), das Blatt bleibt, wie es ist */
+  const txt = encodeURIComponent(kundenText());
   const tel = $('tel').value.trim();
-  window.open(tel ? 'https://wa.me/' + digitsOnly(tel) + '?text=' + txt : 'https://wa.me/?text=' + txt, '_blank');
+  window.open(tel ? 'https://wa.me/' + nkNummer(tel) + '?text=' + txt : 'https://wa.me/?text=' + txt, '_blank');
 });
 $('printBtn').addEventListener('click', () => { if (!nichtsOffen()) window.print(); });
 $('saveBtn').addEventListener('click', () => {
@@ -1271,9 +1319,11 @@ async function ablageAbgleichen(k,c,h,zeilen,geholt){
       const daten=await bilderRein(m[p]);if(daten===null){ohneBild++;continue}   // nie eine Kennung statt Unterschrift hochschicken
       hoch.push({[c.pk]:p,daten,geaendert:jetzt})}
     // Löschen: viele auf einmal warten auf Baran
-    const frei=h.frei||[];delete h.frei;if(h.halt){h.halt=h.halt.filter(p=>!(p in m));if(!h.halt.length)delete h.halt}
-    const weg=Object.keys(h.hash).filter(p=>!(p in m)&&h.hash[p]!=="weg"&&!frei.includes(p)&&!(h.halt||[]).includes(p));
-    if(k!=="mietixPapierkorb"&&k!=="mietixStand"&&(weg.length>HANDVOLL||(weg.length>=3&&!Object.keys(m).length))){h.halt=(h.halt||[]).concat(weg)}
+    const frei=h.frei||[];delete h.frei;if(k==="mietixAufgaben")delete h.halt;if(h.halt){h.halt=h.halt.filter(p=>!(p in m));if(!h.halt.length)delete h.halt}
+    // Einträge ohne Kennung zählen nie als gelöscht; Aufgaben kommen aus der Excel und fragen nie nach (Baran 05.11.2026)
+    const ohneKennung=c.liste&&(liesAblage(k).w||[]).some(x=>x&&x[c.pk]===undefined);
+    const weg=ohneKennung?[]:Object.keys(h.hash).filter(p=>!(p in m)&&h.hash[p]!=="weg"&&!frei.includes(p)&&!(h.halt||[]).includes(p));
+    if(k!=="mietixPapierkorb"&&k!=="mietixStand"&&k!=="mietixAufgaben"&&(weg.length>HANDVOLL||(weg.length>=3&&!Object.keys(m).length))){h.halt=(h.halt||[]).concat(weg)}
     else weg.concat(frei).forEach(p=>{if(!(p in m)&&h.hash[p]!=="weg")hoch.push({[c.pk]:p,daten:{_weg:true},geaendert:jetzt})});
     const streit=await hochladen(k,c,h,hoch);
     if(!streit.length)return{m,ohneBild};
@@ -1424,14 +1474,13 @@ function zeigen(){const el=document.getElementById("abgleich");if(!el)return;
   if(!sitzung){el.innerHTML='<div class="abgl rot"><b>Nicht angemeldet</b><div class="abgl-text">Einmal anmelden, dann ist alles gesichert.</div>'+
     '<input id="ablMail" type="email" inputmode="email" autocomplete="username" placeholder="E-Mail">'+
     '<input id="ablPw" type="password" autocomplete="current-password" placeholder="Passwort">'+
-    '<button id="ablLos" type="button">Anmelden</button><div class="abgl-fehler" id="ablFehler">'+linkFehler+'</div>'+
-    '<a href="#" id="ablNeuZugang" class="abgl-link">Noch keinen Zugang? Hier anlegen</a></div>';
+    '<button id="ablLos" type="button">Anmelden</button><div class="abgl-fehler" id="ablFehler">'+linkFehler+'</div></div>';
     const mail=()=>document.getElementById("ablMail").value.trim(),pw=()=>document.getElementById("ablPw").value,f=document.getElementById("ablFehler");
     document.getElementById("ablLos").onclick=async()=>{f.textContent="";
       try{sichern(await auth("token?grant_type=password",{email:mail(),password:pw()}));
         zeigen();abgleichen()}catch(e){f.textContent=/Invalid login/i.test(e.message)?"E-Mail oder Passwort stimmt nicht.":e.message===KEINE_VERBINDUNG?"Keine Verbindung. Bitte Internet prüfen und noch einmal tippen.":e.message}};
     // Zugang selbst anlegen: geht nur, solange Baran die Registrierung in Supabase kurz freigibt
-    document.getElementById("ablNeuZugang").onclick=async e=>{e.preventDefault();f.textContent="";
+    const neuZ=document.getElementById("ablNeuZugang");if(neuZ)neuZ.onclick=async e=>{e.preventDefault();f.textContent="";
       if(!mail()||pw().length<8){f.textContent="Oben E-Mail und ein eigenes Passwort (mindestens 8 Zeichen) eintragen, dann hier tippen.";return}
       try{const j=await auth("signup",{email:mail(),password:pw()});
         if(j.access_token){sichern(j);zeigen();abgleichen()}else f.textContent="Zugang angelegt. Bitte die Mail bestätigen und dann anmelden."}
@@ -1633,10 +1682,12 @@ zeigen();abgleichen();auslagernBald();
     ".mxStart,.abgl a,.abgl-link,#ablNeuZugang,#ablPwNeu,#ablAus,.sZur,.buZurueck,#bZurueck,#sAlle,#mLoesch,#vOrtAendern,#mVerlBez,#mKautWeg,#mEndWeg,#mEndBez,.kurz>a,a.zu,.buVerw,.zurueckA,#kZu,a.loeschen,.aend,.n a.pdf,#entwurfLeeren,#entwurfZurueck,#weiterSpaeter,.mini,.mehr>span,.mehr>a,.unten>a,.pbTipp a[data-pb],#mVerlInfo .vz>a,#uKopf>a,.mxKlein>summary{background:#E9E9EE!important;border:0!important;border-radius:10px!important;padding:6px 12px!important;text-decoration:none!important;display:inline-flex!important;align-items:center;gap:3px;line-height:1.25!important;width:auto!important;max-width:100%;box-shadow:none!important;cursor:pointer;-webkit-tap-highlight-color:transparent}"+
     ".buVerw,.sZur,.buZurueck,#uKopf>a{display:flex!important;width:max-content!important}.buVerw{margin-left:auto!important;margin-right:auto!important}"+
     ".mxStart{color:#C4161C!important;font-size:16px!important;font-weight:700!important;letter-spacing:0!important;padding:6px 12px 6px 9px!important}.mxStart b{margin-top:-1px;font-size:18px!important}"+
+    /* ‹ Start überall gleich groß (05.11.2026), auch wo look.py nicht gilt */
+    "html body header .mxStart,html body .topbar .mxStart{float:none!important;margin:0 10px 0 0!important;border:0!important;padding:5px 12px 5px 9px!important;background:#E9E9EE!important;border-radius:10px!important;color:#C4161C!important;opacity:1!important;font-size:16px!important;font-weight:600!important;gap:3px!important;line-height:1.2!important;min-height:44px!important;box-sizing:border-box;display:inline-flex!important;align-items:center!important}html body .mxStart b{font-size:20px!important;font-weight:400!important;line-height:16px!important;margin-top:-2px!important}"+
     /* PC und Mac (1.11.2026, Baran: auf allen Geräten gleich): Kopfzeile und Inhalt in einer 680-px-Spalte in der Mitte.
        Muss ganz am Ende stehen: header{padding-left:16px!important} weiter oben (und look.py davor im head) würde sonst gewinnen */
     (istStart||art==="kalender"||art==="schaeden"?"":"@media(min-width:760px){header,.topbar{padding-left:max(16px,calc((100% - 680px)/2))!important;padding-right:max(16px,calc((100% - 680px)/2))!important}"+
-      "main{max-width:680px!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box}header .plus{right:max(16px,calc((100% - 680px)/2))!important}}");
+      "main{max-width:680px!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box;padding-left:16px!important;padding-right:16px!important}header .plus{right:max(16px,calc((100% - 680px)/2))!important}}");
   document.head.appendChild(st);
 
   // ‹ Start und Symbol in der Kopfzeile
@@ -1663,15 +1714,25 @@ zeigen();abgleichen();auslagernBald();
       if(history.length>1&&document.referrer.indexOf(location.origin)===0)history.back();else location.href="https://barankohler.github.io/mietix-zentrale/"},{passive:true})}
 
   // Neue Version: die Seite aus dem Netz mit der geladenen vergleichen (ohne Daten, nur der Text der Seite)
+  // Seit 05.11.2026: nur die Kopfzeile abfragen (Stand der Seite im Netz gegen Stand der geladenen Seite), nicht jedes Mal die ganze Seite. Kennt der Server keinen Stand, wie bisher über den Text.
   let alt=null;
-  async function pruefen(){try{const r=await fetch(location.pathname,{cache:"no-store"});if(!r.ok)return;const t=await r.text(),h=t.length+":"+t.slice(-400);
-    if(alt===null){const c=await fetch(location.pathname,{cache:"force-cache"}).then(x=>x.text()).catch(()=>null);alt=c?c.length+":"+c.slice(-400):h}
-    if(h!==alt){let b=document.getElementById("mxNeu");if(!b){b=document.createElement("div");b.id="mxNeu";b.innerHTML="Neue Version da. <b>Tippen zum Aktualisieren</b>";b.onclick=()=>location.reload();
+  async function pruefen(){try{let neu=false;const k=await fetch(location.pathname,{method:"HEAD",cache:"no-store"}).catch(()=>null);
+    const lm=k&&k.ok?k.headers.get("last-modified"):null,tN=lm?Date.parse(lm):NaN,tD=Date.parse(document.lastModified);
+    if(!isNaN(tN)&&!isNaN(tD))neu=tN>tD+1000;
+    else{const r=await fetch(location.pathname,{cache:"no-store"});if(!r.ok)return;const t=await r.text(),h=t.length+":"+t.slice(-400);
+      if(alt===null){const c=await fetch(location.pathname,{cache:"force-cache"}).then(x=>x.text()).catch(()=>null);alt=c?c.length+":"+c.slice(-400):h}
+      neu=h!==alt}
+    if(neu){let b=document.getElementById("mxNeu");if(!b){b=document.createElement("div");b.id="mxNeu";b.innerHTML="Neue Version da. <b>Tippen zum Aktualisieren</b>";b.onclick=()=>location.reload();
       const kopf=document.querySelector("header,.topbar");if(kopf)kopf.after(b);else document.body.prepend(b)}b.classList.add("an")}}catch(e){}}
   setTimeout(pruefen,3000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)pruefen()});
 
   // Ohne Internet: Seite aus dem Speicher (sw.js liegt im Ordner der Seite)
   if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+  // Startseite: wichtige Seiten einmal in den Speicher, damit sie auch ohne Internet aufgehen, selbst wenn sie auf diesem Gerät noch nie offen waren (05.11.2026)
+  if(istStart&&"serviceWorker" in navigator&&"caches" in window&&location.protocol==="https:"&&location.hostname==="barankohler.github.io")setTimeout(async()=>{try{if(!navigator.onLine)return;const c=await caches.open("mietix-seiten-1");
+    for(const p of ["mietix-vertrag/","mietix-anfragen/","mietix-belegung/","mietix-belegung/angebot.html","mietix-autos/","mietix-geld/","mietix-zentrale/kunden.html","mietix-zentrale/nachrichten.html","mietix-zentrale/umsatzbringer.html"]){const u=location.origin+"/"+p;
+      try{if(!await c.match(u))await c.add(u);const o=p.split("/")[0]+"/";if(o!=="mietix-zentrale/")await navigator.serviceWorker.register("/"+o+"sw.js",{scope:"/"+o})}catch(e){}}}catch(e){}},6000);
 
   // Startseite: die meistgenutzten Seiten schon vorladen, dann öffnen sie ohne Wartezeit
   if(istStart)setTimeout(()=>["mietix-vertrag/","mietix-anfragen/","mietix-belegung/","mietix-autos/"].forEach(p=>{const l=document.createElement("link");l.rel="prefetch";l.href="https://barankohler.github.io/"+p;document.head.appendChild(l)}),2500);
