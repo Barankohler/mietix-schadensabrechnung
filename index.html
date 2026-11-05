@@ -505,7 +505,7 @@ function fallAuf(i) { const b = regLesen()[i]; if (!b) return; const f = b.felde
     + (b.felder ? '<div class="fgk">Beträge</div><div class="fgr">' + z('Schaden netto', fmt(sch)) + (kv > 0 ? z('Gebühr Kostenvoranschlag', fmt(kv)) : '') + z('Kaution', fmt(kau)) + '</div>' : '')
     + '<div class="fgk">Schreiben</div><div class="fgr">' + stufe('Abrechnung', st.abrechnung) + stufe('1. Mahnung', st.erinnerung) + stufe('2. Mahnung', st.mahnung) + stufe('Inkasso', st.inkasso) + '</div>'
     + '<div class="fkn">' + (b.felder ? '<button type="button" class="fbear" id="fallBear">Bearbeiten</button>' : '') + '<button type="button" class="floesch" id="fallWeg">Löschen</button></div>';
-  const be = $('fallBear'); if (be) be.onclick = () => { fallZu(); window.fallLaden(i); };
+  const be = $('fallBear'); if (be) be.onclick = () => { fallZu(); window.fallLaden(i, true); };
   $('fallWeg').onclick = () => { fallZu(); fallLoeschen(i); };
   if ($('fall').parentNode !== document.body) { document.body.appendChild($('fallBg')); document.body.appendChild($('fall')); }   /* unabhängig vom zugeklappten Register */
   $('fallBg').classList.add('an'); $('fall').classList.add('an'); }
@@ -525,7 +525,7 @@ function regZeichnen() {
   }).join('');
   // Fall öffnen: ein Tipp auf die Zeile zeigt alle Infos (02.11.2026, Baran: „man kann dort gar keine Informationen wieder einsehen“)
   el.querySelectorAll('[data-fall]').forEach(z => z.onclick = e => { if (e.target.closest('select')) return; fallAuf(+z.dataset.fall); });
-  const fallLaden = i => {
+  const fallLaden = (i, nurBearbeiten) => {
     const b = regLesen()[i];
     if (!b || !b.felder) return;
     /* Eingetipptes nicht still überschreiben (31.10.2026) */
@@ -538,7 +538,8 @@ function regZeichnen() {
     if (st.abrechnung) $('abrDatum').value = st.abrechnung;
     if (st.erinnerung) $('erinDatum').value = st.erinnerung;
     if (st.mahnung) $('mahnDatum').value = st.mahnung;
-    const naechste = fallBetrag(b).offen > 0.004 ? (st.mahnung ? 'inkasso' : st.erinnerung ? 'mahnung' : st.abrechnung ? 'erinnerung' : 'abrechnung') : 'abrechnung';   /* nichts offen: keine Mahnung */
+    const stufeJetzt = st.mahnung ? 'mahnung' : st.erinnerung ? 'erinnerung' : 'abrechnung';
+    const naechste = nurBearbeiten ? stufeJetzt : b.status === 'bezahlt' ? 'abrechnung' : fallBetrag(b).offen > 0.004 ? (st.mahnung ? 'inkasso' : st.erinnerung ? 'mahnung' : st.abrechnung ? 'erinnerung' : 'abrechnung') : 'abrechnung';   /* nichts offen: keine Mahnung */
     document.querySelector('#artSeg input[value="' + naechste + '"]').checked = true;
     $('datum').value = isoHeute(0);
     $('frist').value = isoHeute(naechste === 'abrechnung' ? 14 : 7);
@@ -547,7 +548,7 @@ function regZeichnen() {
       if ([].some.call(w.options, o => o.value === b.felder.fahrzeug)) w.value = b.felder.fahrzeug;
       else { w.value = '__frei'; $('fahrzeug').style.display = 'block'; }
     }
-    render();
+    render(); waBtnStand();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   window.fallLaden = fallLaden;
@@ -876,12 +877,17 @@ function digitsOnly(t) {
   else if (d.startsWith('0')) d = '49' + d.slice(1);
   return d;
 }
+// Eine Mahnung über 0 € und Inkasso für nichts gibt es nicht (04.11.2026)
+function nichtsOffen() { const a = art(); if (a === 'abrechnung' || daten().offen > 0.004) return false; alert('Hier ist nichts offen. Mahnung oder Inkasso sind nicht möglich.'); return true; }
+function waBtnStand() { const b = $('waBtn'); if (b) b.style.display = art() === 'inkasso' ? 'none' : ''; }
+document.addEventListener('change', e => { if (e.target.closest && e.target.closest('#artSeg')) waBtnStand(); });
 $('waBtn').addEventListener('click', () => {
-  const txt = encodeURIComponent(plainText());
+  if (art() === 'inkasso' || nichtsOffen()) return;
+  const txt = encodeURIComponent(plainText().replace(anrede(daten()), '').replace(/\n*Mit freundlichen Grüßen\n[^\n]*\s*$/, '').trim());   /* WhatsApp ohne Anrede und Gruß (Baran 05.11.2026), das Blatt bleibt, wie es ist */
   const tel = $('tel').value.trim();
   window.open(tel ? 'https://wa.me/' + digitsOnly(tel) + '?text=' + txt : 'https://wa.me/?text=' + txt, '_blank');
 });
-$('printBtn').addEventListener('click', () => window.print());
+$('printBtn').addEventListener('click', () => { if (!nichtsOffen()) window.print(); });
 $('saveBtn').addEventListener('click', () => {
   const d = daten(), a = art();
   /* Leeres Formular verbraucht sonst eine SA-Nummer (31.10.2026, Prüfbericht) */
@@ -892,6 +898,7 @@ $('saveBtn').addEventListener('click', () => {
     $(!d.name ? 'name' : 'schaden').focus();
     return;
   }
+  if (nichtsOffen()) return;
   if (!$('nr').value.trim()) { $('nr').value = d.nr; }
   const l = regLesen();
   const alt = l.findIndex(b => b.nr === d.nr);
@@ -974,6 +981,8 @@ function vorgaenge() {
   try { return JSON.parse(localStorage.getItem('mietixVorgaenge') || '[]') || []; } catch (e) { return []; }
 }
 function fuelleAusVorgang(v) {
+  /* Neuer Kunde erbt nichts vom vorigen: Beträge und Beleg-Nummer leer, sonst wird der alte Fall überschrieben (04.11.2026) */
+  if ($('name').value.trim() && $('name').value.trim() !== String(v.name || '').trim()) { FELD_IDS.forEach(id => { const e = $(id); if (e) e.value = ''; }); const n = $('nr'); if (n) n.value = ''; const ab = document.querySelector('#artSeg input[value="abrechnung"]'); if (ab) ab.checked = true; if (typeof waBtnStand === 'function') waBtnStand(); }
   const setz = (id, wert) => { const el = $(id); if (!el || wert == null || wert === '') return; el.value = wert; ['input', 'change'].forEach(ev => el.dispatchEvent(new Event(ev, { bubbles: true }))); };
   setz('name', v.name); setz('tel', v.telefon);
   if (v.anschrift) {
