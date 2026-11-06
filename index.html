@@ -213,15 +213,19 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
     transition: transform .08s, background .12s, border-color .12s;
   }
   button.act:active { transform: translateY(1px); }
-  .btn-main { background: var(--accent); color: #fff; }
-  .btn-main:hover { background: var(--accent-dark); }
-  #waBtn { background: #E3F4EA; color: #1E8E4E; border-color: transparent; }
-  .btn-copy { background: #FDECEC; color: #C4161C; }
-  .btn-copy:hover { background: #FBDADA; }
+  /* Untere Leiste nach Barans Regel (06.11.2026): links grün „Per WhatsApp senden“, rechts rot „Kopieren“, mittlere Größe; alle anderen hellgrau */
+  .actionbar button.act { flex: 1 1 calc(50% - 5px); max-width: 260px; justify-content: center; min-height: 48px; padding: 10px 14px; }
+  @media (max-width: 430px) { .actionbar button.act { padding: 10px 6px; font-size: 15px; white-space: nowrap; gap: 6px; min-width: 0; } .actionbar svg.ic { display: none; } }
+  @media (max-width: 380px) { .actionbar button.act { font-size: 14px; } .actionbar svg.ic { display: none; } }
+  .btn-main, .btn-ghost { background: #E9E9EE; color: #1C1C1E; }
+  .btn-main:hover, .btn-ghost:hover { background: #DEDEE3; }
+  #waBtn { background: #1B7A44; color: #fff; }
+  #waBtn:hover { background: #166638; }
+  .btn-copy { background: #C4161C; color: #fff; }
+  .btn-copy:hover { background: #9A1116; }
   .btn-copy.done { background: var(--good); color: #fff; }
-  #waBtn { background: #25D366; color: #fff; border-color: #25D366; }
-  .btn-ghost { background: #fff; color: var(--ink); border-color: var(--line-strong); }
-  .btn-ghost:hover { border-color: var(--muted); }
+  /* Roter Hinweis über der unteren Leiste, nie über den Knöpfen (06.11.2026) */
+  body #mxFehler { bottom: calc(var(--leisteH, 120px) + 10px); }
   svg.ic { width: 18px; height: 18px; }
 
   @media print {
@@ -435,6 +439,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
           <span class="lbl">Offener Betrag</span>
           <span class="val" id="restVal">0,00 &euro;</span>
         </div>
+        <div id="betragFehlt" style="display:none;background:#FDECEC;color:#C4161C;border-radius:10px;padding:12px 14px;font-weight:700;font-size:15px">Schadensbetrag fehlt. Ohne Betrag gibt es keine Rückzahlung und keinen offenen Betrag.</div>
         <div class="note" id="note">Die Kaution deckt den Schaden. Der Kunde bekommt den Rest zurück, das steht so im Schreiben.</div>
         <div class="hint" style="margin-top:10px">Wichtig: Hier läuft nur echter Schadensersatz (ohne Umsatzsteuer, eigener SA-Nummernkreis). Miete, Mehrkilometer und andere Leistungen laufen wie gewohnt als Rechnung über Lexware.</div>
       </div>
@@ -471,17 +476,17 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 </div>
 
 <div class="actionbar">
-  <button class="act btn-main" id="saveBtn">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
-    In Register speichern
-  </button>
-  <button class="act btn-ghost" id="waBtn">
+  <button class="act" id="waBtn">
     <svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Z"/></svg>
-    WhatsApp
+    Per WhatsApp senden
   </button>
   <button class="act btn-copy" id="copyBtn">
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
     Kopieren
+  </button>
+  <button class="act btn-main" id="saveBtn">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+    In Register speichern
   </button>
   <button class="act btn-ghost" id="printBtn">
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/></svg>
@@ -497,6 +502,14 @@ const BANK = ["Baran Köhler", "Nassauische Sparkasse", "IBAN: DE59 5105 0015 09
 const USTID = "USt-IdNr.: DE370171210";
 const REGKEY = "mietixSchadensbelege";
 const FELD_IDS = ['nr', 'datum', 'frist', 'abrDatum', 'erinDatum', 'mahnDatum', 'name', 'strasse', 'ort', 'kundennr', 'tel', 'fahrzeug', 'kennzeichen', 'mietVonD', 'mietVonU', 'mietBisD', 'mietBisU', 'schadenstag', 'werkstatt', 'kvnr', 'schaden', 'kvkosten', 'kaution'];
+/* Gewählte Schreib-Stufe überlebt das Neuladen (06.11.2026, Prüfung 2: sonst stand nach dem Neuladen „Abrechnung“ mit dem Mahnungsdatum da) */
+const ARTKEY = 'mietixSchadensabrechnungArt';
+function artMerken(nr, a) { try { localStorage.setItem(ARTKEY, JSON.stringify({ nr: nr || '', art: a })); } catch (e) {} }
+/* Frist einer gespeicherten Stufe; ältere Belege kennen nur felder.frist */
+function stufeFrist(b, a) { const f = (b && b.fristen) || {}; return f[a] || ((b && b.felder) || {}).frist || ''; }
+/* Datum des Belegs = Datum der Abrechnung (ältere Belege: von einer Mahnung überschrieben, dann zählt die gespeicherte Abrechnungsstufe) */
+function belegTag(b) { return ((b && b.stufen) || {}).abrechnung || (b && b.datum) || ''; }
+function plusTage(iso, n) { const x = new Date(iso + 'T12:00'); x.setDate(x.getDate() + n); const p = k => String(k).padStart(2, '0'); return x.getFullYear() + '-' + p(x.getMonth() + 1) + '-' + p(x.getDate()); }
 
 function parseNum(v) {
   if (!v) return 0;
@@ -551,7 +564,7 @@ function fallAuf(i) { const b = regLesen()[i]; if (!b) return; const f = b.felde
   const miet = f.mietVonD ? zeitText(f.mietVonD, f.mietVonU) + (f.mietBisD ? ' bis ' + zeitText(f.mietBisD, f.mietBisU) : '') : '';
   const stufe = (t, d) => '<div class="fz"><span>' + t + '</span><b class="' + (d ? 'ja' : 'nein') + '">' + (d ? '✓ ' + deDatum(d) : '✕ noch nicht') + '</b></div>';
   const sch = parseNum(f.schaden), kv = parseNum(f.kvkosten), kau = parseNum(f.kaution);
-  $('fallInhalt').innerHTML = '<h3>' + esc(b.name || 'ohne Name') + '</h3><div class="fnr">' + esc(b.nr) + (b.datum ? ', ' + deDatum(b.datum) : '') + '</div>'
+  $('fallInhalt').innerHTML = '<h3>' + esc(b.name || 'ohne Name') + '</h3><div class="fnr">' + esc(b.nr) + (belegTag(b) ? ', ' + deDatum(belegTag(b)) : '') + '</div>'
     + '<div class="fergebnis' + (erg.rueck > 0 ? ' rueck' : erg.offen > 0.004 ? ' offen' : '') + '"><span>' + (erg.rueck > 0 ? 'Rückzahlung an den Kunden' : 'Offener Betrag') + '</span><b>' + fmt(erg.rueck > 0 ? erg.rueck : erg.offen) + '</b></div>'
     + '<div class="fgk">Kunde</div><div class="fgr">' + z('Name', f.name || b.name) + z('Anschrift', [f.strasse, f.ort].filter(Boolean).join(', ')) + z('Telefon', f.tel) + z('Kundennr.', f.kundennr) + '</div>'
     + '<div class="fgk">Fahrzeug und Schaden</div><div class="fgr">' + z('Fahrzeug', [f.fahrzeug, f.kennzeichen].filter(Boolean).join(', ') || b.fahrzeug) + z('Mietzeit', miet) + z('Schadenstag', f.schadenstag ? deDatum(f.schadenstag) : '') + z('Werkstatt', f.werkstatt) + z('Beleg-Nr. Werkstatt', f.kvnr) + '</div>'
@@ -568,8 +581,9 @@ function fallAuf(i) { const b = regLesen()[i]; if (!b) return; const f = b.felde
 function naechsteStufe(b) { const st = b.stufen || {};
   if (!b.felder || b.status === 'bezahlt' || !(fallBetrag(b).offen > 0.004) || st.inkasso) return '';
   return st.mahnung ? 'inkasso' : st.erinnerung ? 'mahnung' : st.abrechnung ? 'erinnerung' : ''; }
-function fallWeiterKnopf(b) { const n = naechsteStufe(b); if (!n) return '';
-  const frist = (b.felder || {}).frist || '', ueber = frist && frist < isoHeute(0);
+function fallWeiterKnopf(b) { const n = naechsteStufe(b); if (!n) return ''; const st = b.stufen || {};
+  const zuletzt = st.mahnung ? 'mahnung' : st.erinnerung ? 'erinnerung' : 'abrechnung';
+  const frist = stufeFrist(b, zuletzt), ueber = frist && frist < isoHeute(0);   /* Frist des zuletzt gespeicherten Schreibens */
   const text = { erinnerung: '1. Mahnung schreiben', mahnung: '2. Mahnung schreiben', inkasso: 'Inkasso-Übergabe' }[n];
   return '<div class="fgk">' + (ueber ? 'Frist abgelaufen am ' + deDatum(frist) : frist ? 'Frist läuft bis ' + deDatum(frist) : 'Nächster Schritt') + '</div>'
     + '<button type="button" id="fallWeiter" style="display:block;width:100%;border:0;border-radius:12px;padding:13px;font:700 16px inherit;font-family:inherit;cursor:pointer;' + (ueber ? 'background:#C4161C;color:#fff' : 'background:#E9E9EE;color:#1C1C1E') + '">' + text + '</button>'; }
@@ -582,7 +596,7 @@ function regZeichnen() {
     const erg = fallBetrag(b);
     return '<div class="reg-row" data-fall="' + i + '">'
       + '<b>' + b.nr + '</b>'
-      + '<span class="wer">' + esc(b.name || 'ohne Name') + '<div class="was">' + esc([deDatum(b.datum), b.fahrzeug].filter(Boolean).join(', ')) + '</div></span>'
+      + '<span class="wer">' + esc(b.name || 'ohne Name') + '<div class="was">' + esc([deDatum(belegTag(b)), b.fahrzeug].filter(Boolean).join(', ')) + '</div></span>'
       + '<span class="reg-betrag' + (erg.rueck > 0 ? ' rueck' : '') + '">' + (erg.rueck > 0 ? 'zurück ' + fmt(erg.rueck) : fmt(erg.offen)) + '</span><span class="reg-pfeil">›</span>'
       + statusFeld(b, i, erg)
       + '</div>';
@@ -621,6 +635,9 @@ function regZeichnenRest(el) {
     /* Bearbeiten lässt Datum und Frist des Schreibens stehen (06.11.2026: sonst nennt die Mahnung ein falsches Abrechnungsdatum). Neue Stufe: heute, neue Frist. */
     if (!(nurBearbeiten && b.felder.datum)) $('datum').value = isoHeute(0);
     if (!(nurBearbeiten && b.felder.frist)) $('frist').value = isoHeute(naechste === 'abrechnung' ? 14 : 7);
+    /* Bearbeiten einer Mahnung: deren eigenes Datum und eigene Frist, nicht die der Abrechnung (06.11.2026, Prüfung 2) */
+    if (nurBearbeiten && stufeJetzt !== 'abrechnung' && st[stufeJetzt]) { $('datum').value = st[stufeJetzt]; $('frist').value = (b.fristen || {})[stufeJetzt] || plusTage(st[stufeJetzt], 7); }
+    artMerken(b.nr, naechste);
     if (!$('nr').value.trim()) $('nr').value = b.nr;
     const w = $('fahrzeugwahl');
     if (b.felder.fahrzeug) {
@@ -658,7 +675,7 @@ function regZeichnenRest(el) {
   };
 }
 $('regExport').onclick = async function () {
-  const t = regLesen().map(b => [b.nr, deDatum(b.datum), b.name, b.fahrzeug, fmt(b.offen || 0), b.status || 'offen'].join('  |  ')).join('\n')
+  const t = regLesen().map(b => [b.nr, deDatum(belegTag(b)), b.name, b.fahrzeug, fmt(b.offen || 0), b.status || 'offen'].join('  |  ')).join('\n')
     || 'Register ist leer.';
   try { await navigator.clipboard.writeText('Mietix Schadensbelege\n\n' + t); this.textContent = 'Kopiert'; }
   catch (e) { this.textContent = 'Kopieren nicht möglich'; }
@@ -735,7 +752,7 @@ function textAbrechnung(d) {
   L.push('');
   L.push('Schadensersatz nach ' + belegQuelle(d) + ' (netto): ' + fmt(d.schaden));
   if (d.kvk > 0) L.push('Kosten der Erstellung des Kostenvoranschlags: ' + fmt(d.kvk));
-  L.push(kautionZeile(d) + ': -' + fmt(d.kau).replace('-', ''));
+  if (d.kau > 0) L.push(kautionZeile(d) + ': -' + fmt(d.kau).replace('-', ''));   /* ohne Kaution keine Zeile, nie „-0,00 €“ (06.11.2026) */
   L.push(summeLabel(d) + ': ' + fmt(d.rueck > 0 ? d.rueck : d.offen));
   L.push('');
   L.push('Keine Umsatzsteuer: Es handelt sich um echten Schadensersatz, keine umsatzsteuerbare Leistung. Dieser Beleg ist keine Rechnung im Sinne des § 14 UStG.');
@@ -758,7 +775,7 @@ function textAufstellung(d) {
   const L = ['', 'Aufstellung (wie Schadensersatzabrechnung ' + d.nr + '):'];
   L.push('Schadensersatz nach ' + belegQuelle(d) + ' (netto): ' + fmt(d.schaden));
   if (d.kvk > 0) L.push('Kosten der Erstellung des Kostenvoranschlags: ' + fmt(d.kvk));
-  L.push('Einbehaltene Kaution, verrechnet: -' + fmt(d.kau).replace('-', ''));
+  if (d.kau > 0) L.push('Einbehaltene Kaution, verrechnet: -' + fmt(d.kau).replace('-', ''));
   L.push('Offener Betrag: ' + fmt(d.offen));
   return L;
 }
@@ -832,7 +849,7 @@ function tabelleHTML(d) {
     + '<div class="pos-sub">' + esc(belegQuelle(d)) + ', netto</div></td>'
     + '<td class="r">' + fmt(d.schaden) + '</td></tr>';
   if (d.kvk > 0) h += '<tr><td>' + (pos++) + '</td><td>Kosten der Erstellung des Kostenvoranschlags</td><td class="r">' + fmt(d.kvk) + '</td></tr>';
-  h += '<tr><td>' + (pos++) + '</td><td>' + kautionZeile(d)
+  if (d.kau > 0) h += '<tr><td>' + (pos++) + '</td><td>' + kautionZeile(d)
     + '<div class="pos-sub">' + (d.mietvon ? 'Mietzeit ' + esc(d.mietvon) + (d.mietbis ? ' bis ' + esc(d.mietbis) : '') : '') + '</div></td>'
     + '<td class="r">-' + fmt(d.kau).replace('-', '') + '</td></tr>';
   h += '<tr class="summe' + (d.rueck > 0 ? ' rueck' : '') + '"><td></td><td>' + summeLabel(d) + '</td><td class="r">' + fmt(d.rueck > 0 ? d.rueck : d.offen) + '</td></tr></table>';
@@ -853,6 +870,10 @@ function render() {
   document.querySelector('#restBox .lbl').textContent = credit ? 'Rückzahlung an den Kunden' : 'Offener Betrag';
   $('restBox').classList.toggle('credit', credit);
   $('note').classList.toggle('show', credit);
+  /* Ohne Schadensbetrag keine Summe und kein „Die Kaution deckt den Schaden genau“ bei 0 = 0, nur der rote Hinweis (06.11.2026, wie im Schadensformular) */
+  const ohne = !(d.forderung > 0);
+  $('restBox').style.display = ohne ? 'none' : '';
+  $('betragFehlt').style.display = ohne ? '' : 'none'; if (ohne) $('note').classList.remove('show');
   $('bezugFeld').style.display = a === 'abrechnung' ? 'none' : '';
   $('erinWrap').style.display = (a === 'mahnung' || a === 'inkasso') ? '' : 'none';
   $('mahnWrap').style.display = a === 'inkasso' ? '' : 'none';
@@ -931,7 +952,7 @@ function render() {
   h += '<div class="fuss"><div>' + FIRMA.slice(0, 3).join('<br>') + '</div>'
     + '<div>' + FIRMA.slice(3).join('<br>') + '<br>' + USTID + '</div>'
     + '<div>' + BANK.join('<br>') + '</div></div>';
-  doc.innerHTML = h;
+  doc.innerHTML = ohne ? '<div style="background:#FDECEC;color:#C4161C;border-radius:10px;padding:12px 14px;font-weight:700;font-family:-apple-system,system-ui,sans-serif;font-size:15px">Schadensbetrag fehlt. Ohne Betrag lässt sich das Schreiben nicht senden.</div>' : h;
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
 function absaetze(zeilen) {
@@ -950,6 +971,7 @@ function plainText() {
 }
 /* Nachricht an den Kunden: ohne Anrede und Gruß, beginnt groß (Baran 05.11.2026). Das Blatt und das Inkasso-Schreiben bleiben, wie sie sind. */
 function kundenText() {
+  if (!(daten().forderung > 0)) return '';   /* ohne Schadensbetrag kein Kundentext */
   const t = plainText(); if (art() === 'inkasso') return t;
   /* Zeile mit der Anrede samt Leerzeile danach raus, der nächste Absatz beginnt groß (06.11.2026: vorher drei Leerzeilen und „es ist schade“) */
   const L = t.replace(/\n*Mit freundlichen Grüßen\n[^\n]*\s*$/, '').split('\n'), a = L.indexOf(anrede(daten()));
@@ -957,8 +979,16 @@ function kundenText() {
   const s = L.join('\n').replace(/\n{3,}/g, '\n\n').trim();
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
+/* Ohne Schadensbetrag wird nichts gesendet, kopiert oder gedruckt (06.11.2026, wie im Schadensformular) */
+function ohneBetrag() {
+  if (daten().forderung > 0) return false;
+  if (window.mxFehler) mxFehler('Erst den Schadensbetrag eintragen. Ohne Betrag wird nichts gesendet.'); else alert('Erst den Schadensbetrag eintragen.');
+  const f = $('schaden'); if (f) f.focus();
+  return true;
+}
 $('copyBtn').addEventListener('click', async () => {
   const btn = $('copyBtn');
+  if (ohneBetrag()) return;
   try { await navigator.clipboard.writeText(kundenText()); }
   catch (e) { const ta = document.createElement('textarea'); ta.value = kundenText(); document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
   const old = btn.innerHTML;
@@ -978,12 +1008,15 @@ function nichtsOffen() { const a = art(); if (a === 'abrechnung' || daten().offe
 function waBtnStand() { const b = $('waBtn'); if (b) b.style.display = art() === 'inkasso' ? 'none' : ''; }
 document.addEventListener('change', e => { if (e.target.closest && e.target.closest('#artSeg')) waBtnStand(); });
 $('waBtn').addEventListener('click', () => {
-  if (art() === 'inkasso' || nichtsOffen()) return;
+  if (art() === 'inkasso' || ohneBetrag() || nichtsOffen()) return;
   const txt = encodeURIComponent(kundenText());
   const tel = $('tel').value.trim();
   window.open(tel ? 'https://wa.me/' + nkNummer(tel) + '?text=' + txt : 'https://wa.me/?text=' + txt, '_blank');
 });
-$('printBtn').addEventListener('click', () => { if (!nichtsOffen()) window.print(); });
+$('printBtn').addEventListener('click', () => { if (!ohneBetrag() && !nichtsOffen()) window.print(); });
+/* Höhe der unteren Leiste für den roten Hinweis darüber */
+{ const leiste = () => { const a = document.querySelector('.actionbar'); if (a) document.documentElement.style.setProperty('--leisteH', a.offsetHeight + 'px'); };
+  leiste(); window.addEventListener('resize', leiste); }
 $('saveBtn').addEventListener('click', () => {
   const d = daten(), a = art();
   /* Leeres Formular verbraucht sonst eine SA-Nummer (31.10.2026, Prüfbericht) */
@@ -1014,12 +1047,24 @@ $('saveBtn').addEventListener('click', () => {
   const felder = {};
   FELD_IDS.forEach(id => { felder[id] = $(id).value; });
   felder.nr = d.nr;
-  const eintrag = {
-    nr: d.nr, datum: d.datum || isoHeute(0), name: d.name, fahrzeug: fzText(d),
+  /* Datum und Frist des Belegs gehören der Abrechnung (06.11.2026, Prüfung 2): eine Mahnung speichert nur ihre eigene Stufe
+     mit eigenem Datum (stufen) und eigener Frist (fristen); Belegdatum und Abrechnungsfrist bleiben stehen */
+  const altB = alt > -1 ? l[alt] : null, vf = (altB && altB.felder) || {};
+  let belegDatum = d.datum || isoHeute(0);
+  if (a !== 'abrechnung') {
+    const abrSt = altB && (altB.stufen || {}).abrechnung;   /* gespeichertes Abrechnungsdatum zuerst: heilt auch früher überschriebene Belege */
+    belegDatum = abrSt || (altB && altB.datum) || $('abrDatum').value || belegDatum;
+    felder.datum = abrSt || vf.datum || (altB && altB.datum) || $('abrDatum').value || felder.datum;
+    if (altB) felder.frist = vf.frist || '';
+  }
+  const eintrag = Object.assign({}, altB || {}, {
+    nr: d.nr, datum: belegDatum, name: d.name, fahrzeug: fzText(d),
     offen: d.offen, rueck: d.rueck, status: status,
-    stufen: Object.assign({}, alt > -1 ? (l[alt].stufen || {}) : {}, (() => { const o = {}; o[a] = d.datum || isoHeute(0); return o; })()),
+    stufen: Object.assign({}, altB ? (altB.stufen || {}) : {}, (() => { const o = {}; o[a] = d.datum || isoHeute(0); return o; })()),
+    fristen: Object.assign({}, altB ? (altB.fristen || {}) : {}, (() => { const o = {}; o[a] = d.frist || ''; return o; })()),
     felder: felder,
-  };
+  });
+  artMerken(d.nr, a);
   if (alt > -1) l[alt] = eintrag; else l.push(eintrag);
   const btn = $('saveBtn'), old = btn.dataset.orig = btn.dataset.orig || btn.innerHTML;
   /* „Gespeichert“ nur bei echtem Erfolg (06.11.2026: bei vollem Speicher stand vorher trotzdem „Gespeichert“) */
@@ -1165,6 +1210,7 @@ function fuelleAusVorgang(v) {
 $('leerBtn').addEventListener('click', () => {
   if (!confirm('Alle Eingaben zurücksetzen? Gespeicherte Fälle im Register bleiben.')) return;   // Rückfrage (1.11.2026)
   if (window.SA_ENT) SA_ENT.weg();
+  artMerken('', 'abrechnung');
   FELD_IDS.forEach(id => { const e = $(id); if (e) e.value = ''; });
   const w = $('fahrzeugwahl');
   w.value = '';
@@ -1185,8 +1231,10 @@ document.querySelectorAll('#artSeg input').forEach(el => el.addEventListener('ch
   /* Schon gespeicherte Stufe dieses Belegs: ihr Datum bleibt; neue Stufe: heute (06.11.2026) */
   const nrv = $('nr').value.trim(), gespeichert = nrv ? ((regLesen().find(b => b.nr === nrv) || {}).stufen || {})[art()] : '';
   const tage = art() === 'abrechnung' ? 14 : 7, ab = gespeichert || isoHeute(0);
-  $('datum').value = ab;
-  { const x = new Date(ab + 'T12:00'); x.setDate(x.getDate() + tage); const p = n => String(n).padStart(2, '0'); $('frist').value = x.getFullYear() + '-' + p(x.getMonth() + 1) + '-' + p(x.getDate()); }
+  const bel = nrv ? regLesen().find(b => b.nr === nrv) : null;
+  $('datum').value = gespeichert && art() === 'abrechnung' && bel && bel.felder && bel.felder.datum ? bel.felder.datum : ab;
+  $('frist').value = (gespeichert && ((bel.fristen || {})[art()] || (art() === 'abrechnung' && (bel.felder || {}).frist))) || plusTage(ab, tage);
+  artMerken(nrv, art());
   if (window.SA_ENT) SA_ENT.merken();
   render();
 }));
@@ -1194,6 +1242,16 @@ document.querySelectorAll('#basisSeg input').forEach(el => el.addEventListener('
 FELD_IDS.forEach(id => { const e = $(id); if (!e) return; e.addEventListener('input', render); e.addEventListener('change', render); });
 regZeichnen();
 render();
+/* Nach dem Entwurf (DOMContentLoaded) die zuletzt gewählte Stufe wieder wählen; alte Entwürfe: Stufe, deren gespeichertes Datum passt */
+document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
+  if (location.search) return;
+  let m = null; try { m = JSON.parse(localStorage.getItem(ARTKEY) || 'null'); } catch (e) {}
+  const nrv = $('nr').value.trim();
+  let a = m && (m.nr || '') === nrv ? m.art : '';
+  if (!a && nrv) { const b = regLesen().find(x => x.nr === nrv), st = (b && b.stufen) || {}; a = ['inkasso', 'mahnung', 'erinnerung'].find(k => st[k] && st[k] === $('datum').value) || ''; }
+  const el = a && document.querySelector('#artSeg input[value="' + a + '"]');
+  if (el && !el.checked) { el.checked = true; waBtnStand(); render(); }
+}, 0));
 </script>
 <script>/* Mietix Abgleich: Mietverträge, Anfragen, Kunden und Fahrzeuge auf allen Geräten gleich (Supabase Frankfurt, seit 26.10.2026).
    Wird von tools/vertrag/build_html.py und tools/anfragen/build_html.py in die Seite eingebaut.
@@ -1770,8 +1828,8 @@ zeigen();abgleichen();auslagernBald();
     "html body header .mxStart,html body .topbar .mxStart{float:none!important;margin:0 10px 0 0!important;border:0!important;padding:5px 12px 5px 9px!important;background:#E9E9EE!important;border-radius:10px!important;color:#C4161C!important;opacity:1!important;font-size:16px!important;font-weight:600!important;gap:3px!important;line-height:1.2!important;min-height:44px!important;box-sizing:border-box;display:inline-flex!important;align-items:center!important}html body .mxStart b{font-size:20px!important;font-weight:400!important;line-height:16px!important;margin-top:-2px!important}"+
     /* PC und Mac (1.11.2026, Baran: auf allen Geräten gleich): Kopfzeile und Inhalt in einer 680-px-Spalte in der Mitte.
        Muss ganz am Ende stehen: header{padding-left:16px!important} weiter oben (und look.py davor im head) würde sonst gewinnen */
-    (istStart||art==="kalender"||art==="schaeden"?"":"@media(min-width:760px){header,.topbar{padding-left:max(16px,calc((100% - 680px)/2))!important;padding-right:max(16px,calc((100% - 680px)/2))!important}"+
-      "main{max-width:680px!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box;padding-left:16px!important;padding-right:16px!important}header .plus{right:max(16px,calc((100% - 680px)/2))!important}}");
+    (istStart||art==="kalender"||art==="schaeden"?"":"@media(min-width:760px){header,.topbar{padding-left:max(16px,calc((100% - 680px)/2 + 16px))!important;padding-right:max(16px,calc((100% - 680px)/2 + 16px))!important}"+
+      "main{max-width:680px!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box;padding-left:16px!important;padding-right:16px!important}header .plus{right:max(16px,calc((100% - 680px)/2 + 16px))!important}}");
   document.head.appendChild(st);
 
   // ‹ Start und Symbol in der Kopfzeile
