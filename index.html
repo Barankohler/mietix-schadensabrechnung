@@ -250,7 +250,11 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 .mxKlein{margin-top:8px}.mxKlein>summary{display:inline-flex;align-items:center;gap:6px;list-style:none;cursor:pointer;font-size:14px;font-weight:800;color:#1C1C1E;background:#F2F2F4;border-radius:999px;padding:9px 14px;min-height:40px;box-sizing:border-box}
 .mxKlein>summary::-webkit-details-marker{display:none}.mxKlein>summary em{font-style:normal;color:#C4161C;font-size:18px;line-height:1;transition:transform .15s}.mxKlein[open]>summary em{transform:rotate(90deg)}
 .mxText{font-size:14px;color:#8A8A8E;font-weight:600;margin:0 0 10px;line-height:1.4}
-@media print{.regKlapp,#fall,#fallBg{display:none!important}}
+@media print{.regKlapp,#fall,#fallBg,.abglZeile{display:none!important}}
+/* Kopf bündig mit dem Inhalt (06.11.2026): ‹ Start steht über der linken Kante der Eingabe, nicht am Rand */
+.abglZeile{max-width:1180px;margin:0 auto;padding:12px 20px 0}.abglZeile:has(#abgleich:empty){display:none}
+@media(max-width:460px){.abglZeile{padding-left:12px;padding-right:12px}}
+@media(min-width:760px){html body .topbar{padding-left:max(20px,calc((100% - 1180px)/2 + 20px))!important;padding-right:max(20px,calc((100% - 1180px)/2 + 20px))!important}}
 /* Zeitraum-Zeile und Fertig-Knopf wie im Angebot (1.11.2026) */
 .ztS{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1.5px solid #E4E4E7;border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;font-size:15px;font-weight:800;color:#1C1C1E}
 .ztS span{min-width:0}.ztS u{color:#C4161C;text-decoration:none;font-size:13px;white-space:nowrap}
@@ -324,7 +328,10 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 <div class="topbar">
   <span class="brand">Mietix<span class="dot">.</span></span>
   <span class="brand-sub">Sportwagenvermietung, Schadensabrechnung</span>
+  <i id="abgleichPunkt" title="Abgleich aller Geräte" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#B0B0B3;vertical-align:middle;margin-left:4px"></i>
 </div>
+<!-- Hinweis „Nicht angemeldet“ wie auf den anderen Seiten (06.11.2026) -->
+<div class="abglZeile"><div id="abgleich"></div></div>
 
 <div class="wrap">
   <!-- EINGABE -->
@@ -352,6 +359,7 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
           <div><p class="sub">Datum</p><input type="date" id="datum"></div>
           <div><p class="sub">Zahlbar bis</p><input type="date" id="frist"></div>
         </div>
+        <div class="hint" id="nrStand" style="font-size:13px"></div>
         <div class="hint">Eigener Jahres-Nummernkreis (SA-2026-001, SA-2026-002, ...), unabhängig von Lexware, eingeführt am 28.10.2026. Die nächste freie Nummer wird aus dem Register vorgeschlagen.</div>
       </div>
 
@@ -435,9 +443,9 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
         <label>So läuft der Prozess</label>
         <ol class="prozess">
           <li><b>Abrechnung</b> senden, Frist 14 Tage. Danach "In Register speichern": der Fall ist erfasst, der Status steht auf <i>offen</i>.</li>
-          <li>Frist verstrichen? Im Register auf <b>Laden</b> tippen: alles ist vorbelegt, die <b>1. Mahnung</b> ist schon ausgewählt (Frist 7 Tage). Senden, speichern.</li>
-          <li>Wieder nichts? <b>Laden</b>, die <b>2. und letzte Mahnung</b> steht bereit: Verzug, letzte Frist 7 Tage, Inkasso-Ankündigung. Senden, speichern.</li>
-          <li>Immer noch nichts? <b>Laden</b>, die <b>Inkasso-Übergabe</b> steht bereit: Falldatenblatt drucken und mit den Anlagen ans Inkassobüro geben.</li>
+          <li>Frist verstrichen? Im Register den Fall antippen, dann <b>1. Mahnung schreiben</b>: alles ist vorbelegt, die <b>1. Mahnung</b> ist schon ausgewählt (Frist 7 Tage). Senden, speichern.</li>
+          <li>Wieder nichts? Fall antippen, <b>2. Mahnung schreiben</b>: Verzug, letzte Frist 7 Tage, Inkasso-Ankündigung. Senden, speichern.</li>
+          <li>Immer noch nichts? Fall antippen, <b>Inkasso-Übergabe</b>: Falldatenblatt drucken und mit den Anlagen ans Inkassobüro geben.</li>
         </ol>
         <div class="hint"><b>Beweise sichern, als käme jeder Fall vor Gericht:</b> Jedes Schreiben als PDF ablegen (Drucken / PDF). Versand per E-Mail und zusätzlich per Einwurf-Einschreiben, so ist der Zugang beweisbar. Dazu gehören: unterschriebener Mietvertrag, Übergabe- und Rückgabeprotokoll, Fotos mit Datum, Kostenvoranschlag oder Reparaturrechnung.</div>
       </div>
@@ -510,7 +518,7 @@ function isoHeute(plus) {
 /* Register im gemeinsamen Speicher (Liste Punkt 5, 30.10.2026): gilt auf allen Handys, Nummern nie doppelt.
    Liegt in mietixStand.schadensbelege = {liste:[...], max:{Jahr: höchste je vergebene Nummer}}. Der alte Stand vom Gerät wird einmal übernommen. */
 function regRoh() { try { return (JSON.parse(localStorage.getItem('mietixStand') || '{}') || {}).schadensbelege || null; } catch (e) { return null; } }
-function regSpeichern(r) { try { const st = JSON.parse(localStorage.getItem('mietixStand') || '{}') || {}; st.schadensbelege = r; localStorage.setItem('mietixStand', JSON.stringify(st)); } catch (e) {} }
+function regSpeichern(r) { try { const st = JSON.parse(localStorage.getItem('mietixStand') || '{}') || {}; st.schadensbelege = r; localStorage.setItem('mietixStand', JSON.stringify(st)); return true; } catch (e) { return false; } }   /* false: nicht gespeichert, z. B. Speicher voll (06.11.2026) */
 function regLesen() {
   const r = regRoh(); let alt = []; try { alt = JSON.parse(localStorage.getItem(REGKEY) || '[]') || []; } catch (e) {}
   const l = r && Array.isArray(r.liste) ? r.liste.slice() : [];
@@ -520,8 +528,10 @@ function regLesen() {
 }
 function regSchreiben(l) { const r = regRoh() || {}, max = Object.assign({}, r.max || {});
   l.forEach(b => { const m = /^SA-(\d{4})-(\d+)$/.exec(b.nr || ''); if (m) max[m[1]] = Math.max(max[m[1]] || 0, +m[2]); });
-  regSpeichern({ liste: l, max: max }); }
-window.addEventListener('mietix-abgleich', () => { try { regZeichnen(); } catch (e) {} });
+  return regSpeichern({ liste: l, max: max }); }
+window.addEventListener('mietix-abgleich', () => { try { regZeichnen(); render(); } catch (e) {} });
+/* Zweites Fenster speichert: Register und vorgeschlagene Nummer hier sofort mitziehen (06.11.2026) */
+window.addEventListener('storage', e => { if (e.key && e.key !== 'mietixStand' && e.key !== REGKEY) return; try { regZeichnen(); render(); } catch (x) {} });
 function naechsteNummer() {
   /* Jahres-Nummernkreis: SA-2026-001, SA-2026-002, ... ab Januar wieder bei 001 */
   const jahr = new Date().getFullYear();
@@ -547,11 +557,22 @@ function fallAuf(i) { const b = regLesen()[i]; if (!b) return; const f = b.felde
     + '<div class="fgk">Fahrzeug und Schaden</div><div class="fgr">' + z('Fahrzeug', [f.fahrzeug, f.kennzeichen].filter(Boolean).join(', ') || b.fahrzeug) + z('Mietzeit', miet) + z('Schadenstag', f.schadenstag ? deDatum(f.schadenstag) : '') + z('Werkstatt', f.werkstatt) + z('Beleg-Nr. Werkstatt', f.kvnr) + '</div>'
     + (b.felder ? '<div class="fgk">Beträge</div><div class="fgr">' + z('Schaden netto', fmt(sch)) + (kv > 0 ? z('Gebühr Kostenvoranschlag', fmt(kv)) : '') + z('Kaution', fmt(kau)) + '</div>' : '')
     + '<div class="fgk">Schreiben</div><div class="fgr">' + stufe('Abrechnung', st.abrechnung) + stufe('1. Mahnung', st.erinnerung) + stufe('2. Mahnung', st.mahnung) + stufe('Inkasso', st.inkasso) + '</div>'
+    + fallWeiterKnopf(b)
     + '<div class="fkn">' + (b.felder ? '<button type="button" class="fbear" id="fallBear">Bearbeiten</button>' : '') + '<button type="button" class="floesch" id="fallWeg">Löschen</button></div>';
   const be = $('fallBear'); if (be) be.onclick = () => { fallZu(); window.fallLaden(i, true); };
+  const we = $('fallWeiter'); if (we) we.onclick = () => { fallZu(); window.fallLaden(i, false); };
   $('fallWeg').onclick = () => { fallZu(); fallLoeschen(i); };
   if ($('fall').parentNode !== document.body) { document.body.appendChild($('fallBg')); document.body.appendChild($('fall')); }   /* unabhängig vom zugeklappten Register */
   $('fallBg').classList.add('an'); $('fall').classList.add('an'); }
+/* Nächste Mahnstufe direkt aus dem Fall (06.11.2026): Frist abgelaufen, dann groß und rot, sonst grau */
+function naechsteStufe(b) { const st = b.stufen || {};
+  if (!b.felder || b.status === 'bezahlt' || !(fallBetrag(b).offen > 0.004) || st.inkasso) return '';
+  return st.mahnung ? 'inkasso' : st.erinnerung ? 'mahnung' : st.abrechnung ? 'erinnerung' : ''; }
+function fallWeiterKnopf(b) { const n = naechsteStufe(b); if (!n) return '';
+  const frist = (b.felder || {}).frist || '', ueber = frist && frist < isoHeute(0);
+  const text = { erinnerung: '1. Mahnung schreiben', mahnung: '2. Mahnung schreiben', inkasso: 'Inkasso-Übergabe' }[n];
+  return '<div class="fgk">' + (ueber ? 'Frist abgelaufen am ' + deDatum(frist) : frist ? 'Frist läuft bis ' + deDatum(frist) : 'Nächster Schritt') + '</div>'
+    + '<button type="button" id="fallWeiter" style="display:block;width:100%;border:0;border-radius:12px;padding:13px;font:700 16px inherit;font-family:inherit;cursor:pointer;' + (ueber ? 'background:#C4161C;color:#fff' : 'background:#E9E9EE;color:#1C1C1E') + '">' + text + '</button>'; }
 function fallZu() { $('fallBg').classList.remove('an'); $('fall').classList.remove('an'); }
 function regZeichnen() {
   const l = regLesen(), el = $('regListe');
@@ -561,11 +582,24 @@ function regZeichnen() {
     const erg = fallBetrag(b);
     return '<div class="reg-row" data-fall="' + i + '">'
       + '<b>' + b.nr + '</b>'
-      + '<span class="wer">' + esc(b.name || 'ohne Name') + '<div class="was">' + deDatum(b.datum) + ', ' + esc(b.fahrzeug || '') + '</div></span>'
+      + '<span class="wer">' + esc(b.name || 'ohne Name') + '<div class="was">' + esc([deDatum(b.datum), b.fahrzeug].filter(Boolean).join(', ')) + '</div></span>'
       + '<span class="reg-betrag' + (erg.rueck > 0 ? ' rueck' : '') + '">' + (erg.rueck > 0 ? 'zurück ' + fmt(erg.rueck) : fmt(erg.offen)) + '</span><span class="reg-pfeil">›</span>'
-      + '<select class="badge ' + (b.status || 'offen') + '" data-st="' + i + '" aria-label="Status" style="border:0;font:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:18px;background-image:url(&quot;data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%23666%27 fill=%27none%27 stroke-width=%271.5%27/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center">' + STATUS.map(s => '<option value="' + s + '"' + ((b.status || 'offen') === s ? ' selected' : '') + '>' + s + '</option>').join('') + '</select>'
+      + statusFeld(b, i, erg)
       + '</div>';
   }).join('');
+  regZeichnenRest(el);
+}
+/* Stand je Fall (06.11.2026): Rückzahlung an den Kunden heißt nicht „offen“; genau gedeckt ist erledigt */
+const SELSTIL = 'border:0;font:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:18px;background-image:url(&quot;data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%23666%27 fill=%27none%27 stroke-width=%271.5%27/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center';
+function statusFeld(b, i, erg) {
+  const s = b.status || 'offen';
+  if (erg.rueck > 0) { const w = s === 'bezahlt' ? 'bezahlt' : 'offen';
+    return '<select class="badge ' + (w === 'bezahlt' ? 'bezahlt' : 'erinnert') + '" data-st="' + i + '" aria-label="Stand" style="' + SELSTIL + '">'
+      + [['offen', 'zurückzahlen'], ['bezahlt', 'zurückgezahlt']].map(o => '<option value="' + o[0] + '"' + (w === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>'; }
+  if (b.felder && !(erg.offen > 0.004)) return '<span class="badge bezahlt">erledigt</span>';
+  return '<select class="badge ' + s + '" data-st="' + i + '" aria-label="Status" style="border:0;font:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:18px;background-image:url(&quot;data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%23666%27 fill=%27none%27 stroke-width=%271.5%27/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center">' + STATUS.map(x => '<option value="' + x + '"' + (s === x ? ' selected' : '') + '>' + x + '</option>').join('') + '</select>';
+}
+function regZeichnenRest(el) {
   // Fall öffnen: ein Tipp auf die Zeile zeigt alle Infos (02.11.2026, Baran: „man kann dort gar keine Informationen wieder einsehen“)
   el.querySelectorAll('[data-fall]').forEach(z => z.onclick = e => { if (e.target.closest('select')) return; fallAuf(+z.dataset.fall); });
   const fallLaden = (i, nurBearbeiten) => {
@@ -584,14 +618,17 @@ function regZeichnen() {
     const stufeJetzt = st.mahnung ? 'mahnung' : st.erinnerung ? 'erinnerung' : 'abrechnung';
     const naechste = nurBearbeiten ? stufeJetzt : b.status === 'bezahlt' ? 'abrechnung' : fallBetrag(b).offen > 0.004 ? (st.mahnung ? 'inkasso' : st.erinnerung ? 'mahnung' : st.abrechnung ? 'erinnerung' : 'abrechnung') : 'abrechnung';   /* nichts offen: keine Mahnung */
     document.querySelector('#artSeg input[value="' + naechste + '"]').checked = true;
-    $('datum').value = isoHeute(0);
-    $('frist').value = isoHeute(naechste === 'abrechnung' ? 14 : 7);
+    /* Bearbeiten lässt Datum und Frist des Schreibens stehen (06.11.2026: sonst nennt die Mahnung ein falsches Abrechnungsdatum). Neue Stufe: heute, neue Frist. */
+    if (!(nurBearbeiten && b.felder.datum)) $('datum').value = isoHeute(0);
+    if (!(nurBearbeiten && b.felder.frist)) $('frist').value = isoHeute(naechste === 'abrechnung' ? 14 : 7);
+    if (!$('nr').value.trim()) $('nr').value = b.nr;
     const w = $('fahrzeugwahl');
     if (b.felder.fahrzeug) {
       if ([].some.call(w.options, o => o.value === b.felder.fahrzeug)) w.value = b.felder.fahrzeug;
       else { w.value = '__frei'; $('fahrzeug').style.display = 'block'; }
     }
     render(); waBtnStand();
+    if (window.SA_ENT) SA_ENT.merken();   /* geladener Fall samt Nummer bleibt nach dem Neuladen derselbe */
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   window.fallLaden = fallLaden;
@@ -612,7 +649,8 @@ function regZeichnen() {
     b.status = 'offen'; regSchreiben(l2); regZeichnen();
   });
   window.fallLoeschen = i => {
-    if (!confirm('Beleg wirklich aus dem Register löschen?')) return;
+    const l0 = regLesen(), b0 = l0[i]; if (!b0) return;
+    if (!confirm('Beleg ' + b0.nr + (b0.name ? ' von ' + b0.name : '') + ' aus dem Register löschen?\n\nEr liegt danach im Papierkorb.')) return;
     const l2 = regLesen(), weg = l2.splice(i, 1)[0];
     try { const pk = JSON.parse(localStorage.getItem('mietixPapierkorb') || '[]') || []; pk.push({ id: 'schadensbeleg:' + Date.now(), ablage: 'schadensbelege', schluessel: weg.nr, eintrag: weg, zeit: new Date().toISOString(), text: 'Schadensbeleg ' + weg.nr + ' ' + (weg.name || '') }); localStorage.setItem('mietixPapierkorb', JSON.stringify(pk)); } catch (e) {}
     try { const alt = JSON.parse(localStorage.getItem(REGKEY) || '[]') || []; localStorage.setItem(REGKEY, JSON.stringify(alt.filter(x => x.nr !== weg.nr))); } catch (e) {}
@@ -803,6 +841,12 @@ function tabelleHTML(d) {
 
 function render() {
   const d = daten(), a = art();
+  /* Vorgeschlagene Nummer immer die nächste wirklich freie, Stand sichtbar (06.11.2026) */
+  const nrv = $('nr').value.trim(), ns = $('nrStand');
+  if (!nrv) $('nr').placeholder = d.nr;
+  if (ns) { const drin = nrv && regLesen().some(b => b.nr === nrv);
+    ns.innerHTML = drin ? '<b style="color:#1B7A44">✓ ' + esc(nrv) + ' ist im Register gespeichert.</b> Speichern ändert diesen Beleg.'
+      : nrv ? esc(nrv) + ' ist noch nicht im Register.' : 'Neuer Beleg. Beim Speichern bekommt er die nächste freie Nummer, jetzt ' + esc(d.nr) + '.'; }
   /* Restbetrag-Box */
   const credit = d.diff < 0;
   $('restVal').textContent = fmt(credit ? Math.abs(d.diff) : d.offen);
@@ -907,7 +951,10 @@ function plainText() {
 /* Nachricht an den Kunden: ohne Anrede und Gruß, beginnt groß (Baran 05.11.2026). Das Blatt und das Inkasso-Schreiben bleiben, wie sie sind. */
 function kundenText() {
   const t = plainText(); if (art() === 'inkasso') return t;
-  const s = t.replace(anrede(daten()), '').replace(/\n*Mit freundlichen Grüßen\n[^\n]*\s*$/, '').trim();
+  /* Zeile mit der Anrede samt Leerzeile danach raus, der nächste Absatz beginnt groß (06.11.2026: vorher drei Leerzeilen und „es ist schade“) */
+  const L = t.replace(/\n*Mit freundlichen Grüßen\n[^\n]*\s*$/, '').split('\n'), a = L.indexOf(anrede(daten()));
+  if (a > -1) { L.splice(a, L[a + 1] === '' ? 2 : 1); if (L[a]) L[a] = L[a].charAt(0).toUpperCase() + L[a].slice(1); }
+  const s = L.join('\n').replace(/\n{3,}/g, '\n\n').trim();
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 $('copyBtn').addEventListener('click', async () => {
@@ -948,8 +995,14 @@ $('saveBtn').addEventListener('click', () => {
     return;
   }
   if (nichtsOffen()) return;
-  if (!$('nr').value.trim()) { $('nr').value = d.nr; }
   const l = regLesen();
+  /* Ohne Nummer: derselbe Fall steht schon im Register (z. B. alter Entwurf nach dem Neuladen)? Dann diesen Beleg ändern, nicht doppelt anlegen (06.11.2026) */
+  if (!$('nr').value.trim()) {
+    const gleich = ['name', 'schaden', 'kvkosten', 'kaution', 'schadenstag'], f0 = {}; gleich.forEach(id => { f0[id] = $(id).value.trim(); });
+    const da = l.filter(b => b.felder && gleich.every(id => String(b.felder[id] || '').trim() === f0[id])).pop();
+    if (da && confirm('Diesen Fall gibt es schon als ' + da.nr + (da.name ? ' (' + da.name + ')' : '') + '.\n\nOK: ' + da.nr + ' ändern. Abbrechen: als neuen Beleg speichern.')) d.nr = da.nr;
+    else d.nr = naechsteNummer();   /* nächste wirklich freie Nummer, jetzt neu bestimmt */
+  }
   const alt = l.findIndex(b => b.nr === d.nr);
   /* Statuskette: Speichern der Stufe setzt den Status weiter, nie zurueck */
   const stufenStatus = { abrechnung: 'offen', erinnerung: 'erinnert', mahnung: 'gemahnt', inkasso: 'inkasso' }[a];
@@ -960,6 +1013,7 @@ $('saveBtn').addEventListener('click', () => {
   }
   const felder = {};
   FELD_IDS.forEach(id => { felder[id] = $(id).value; });
+  felder.nr = d.nr;
   const eintrag = {
     nr: d.nr, datum: d.datum || isoHeute(0), name: d.name, fahrzeug: fzText(d),
     offen: d.offen, rueck: d.rueck, status: status,
@@ -967,10 +1021,20 @@ $('saveBtn').addEventListener('click', () => {
     felder: felder,
   };
   if (alt > -1) l[alt] = eintrag; else l.push(eintrag);
-  regSchreiben(l); regZeichnen();
-  const btn = $('saveBtn'), old = btn.innerHTML;
-  btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Gespeichert';
-  setTimeout(() => { btn.innerHTML = old; }, 1600);
+  const btn = $('saveBtn'), old = btn.dataset.orig = btn.dataset.orig || btn.innerHTML;
+  /* „Gespeichert“ nur bei echtem Erfolg (06.11.2026: bei vollem Speicher stand vorher trotzdem „Gespeichert“) */
+  if (!regSchreiben(l)) {
+    regZeichnen(); render();
+    btn.textContent = 'Nicht gespeichert';
+    if (window.mxFehler && !document.querySelector('#mxFehler.an')) mxFehler('Nicht gespeichert: Der Beleg konnte auf diesem Gerät nicht gespeichert werden.');
+    setTimeout(() => { btn.innerHTML = old; }, 2500);
+    return;
+  }
+  /* Die Nummer bleibt im Formular und im Entwurf: nochmal Speichern ändert denselben Beleg */
+  $('nr').value = d.nr; $('nr').dispatchEvent(new Event('input', { bubbles: true }));
+  regZeichnen(); render();
+  btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Gespeichert als ' + esc(d.nr);
+  setTimeout(() => { btn.innerHTML = old; }, 2500);
 });
 
 /* ---------- Flotte (aus der gemeinsamen Preisdatei) ---------- */
@@ -1118,7 +1182,12 @@ $('datum').value = isoHeute(0);
 $('frist').value = isoHeute(14);
 $('nr').placeholder = naechsteNummer();
 document.querySelectorAll('#artSeg input').forEach(el => el.addEventListener('change', () => {
-  $('frist').value = isoHeute(art() === 'abrechnung' ? 14 : 7);
+  /* Schon gespeicherte Stufe dieses Belegs: ihr Datum bleibt; neue Stufe: heute (06.11.2026) */
+  const nrv = $('nr').value.trim(), gespeichert = nrv ? ((regLesen().find(b => b.nr === nrv) || {}).stufen || {})[art()] : '';
+  const tage = art() === 'abrechnung' ? 14 : 7, ab = gespeichert || isoHeute(0);
+  $('datum').value = ab;
+  { const x = new Date(ab + 'T12:00'); x.setDate(x.getDate() + tage); const p = n => String(n).padStart(2, '0'); $('frist').value = x.getFullYear() + '-' + p(x.getMonth() + 1) + '-' + p(x.getDate()); }
+  if (window.SA_ENT) SA_ENT.merken();
   render();
 }));
 document.querySelectorAll('#basisSeg input').forEach(el => el.addEventListener('change', render));
