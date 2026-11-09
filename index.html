@@ -406,7 +406,8 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
         <div class="mxFenster" id="fZeitS" role="dialog" aria-label="Zeitraum"><div class="mxKopf"><h3>Zeitraum</h3><button class="mxZu" type="button" aria-label="Schließen">✕</button></div>
           <div class="grid2"><div><p class="sub">Von</p><input type="date" id="mietVonD"></div><div><p class="sub">Uhrzeit</p><input type="time" id="mietVonU"></div></div>
           <div class="grid2" style="margin-top:8px"><div><p class="sub">Bis</p><input type="date" id="mietBisD"></div><div><p class="sub">Uhrzeit</p><input type="time" id="mietBisU"></div></div>
-          <button class="ztFertig" type="button" onclick="mxZu()">Fertig</button>
+          <div id="ztFehler" role="alert" style="color:#C4161C;font-size:14px;font-weight:700;margin-top:8px"></div>
+          <button class="ztFertig" type="button" onclick="ztFertig()">Fertig</button>
         </div>
         <div style="margin-top:8px"><p class="sub">Schadenstag</p><input type="date" id="schadenstag"></div>
       </div>
@@ -497,13 +498,16 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 <script>
 const $ = id => document.getElementById(id);
 const eur = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
-const FIRMA = ["Mietix Sportwagenvermietung", "Petersanderstraße 43 B", "55252 Mainz-Kastel", "Tel.: 0162 2701044", "info@mietix.de", "www.mietix.de"];
+const FIRMA = ["Mietix Sportwagenvermietung", "Peter-Sander-Straße 43 B", "55252 Mainz-Kastel", "Tel.: 0162 2701044", "info@mietix.de", "www.mietix.de"];
 const BANK = ["Baran Köhler", "Nassauische Sparkasse", "IBAN: DE59 5105 0015 0997 0123 49", "BIC: NASSDE55XXX"];
 const USTID = "USt-IdNr.: DE370171210";
 const REGKEY = "mietixSchadensbelege";
 const FELD_IDS = ['nr', 'datum', 'frist', 'abrDatum', 'erinDatum', 'mahnDatum', 'name', 'strasse', 'ort', 'kundennr', 'tel', 'fahrzeug', 'kennzeichen', 'mietVonD', 'mietVonU', 'mietBisD', 'mietBisU', 'schadenstag', 'werkstatt', 'kvnr', 'schaden', 'kvkosten', 'kaution'];
 /* Gewählte Schreib-Stufe überlebt das Neuladen (06.11.2026, Prüfung 2: sonst stand nach dem Neuladen „Abrechnung“ mit dem Mahnungsdatum da) */
 const ARTKEY = 'mietixSchadensabrechnungArt';
+/* Abrechnungsart bleibt beim Neuladen und gehört zum Fall (Nachtprüfung 09.11.2026), der Entwurf merkt sich Knöpfe ohne id nicht */
+const BASISKEY = 'mietixSchadensabrechnungBasis';
+function basisSetzen(w) { const el = document.querySelector('#basisSeg input[value="' + (w === 'rechnung' ? 'rechnung' : 'kv') + '"]'); if (el) el.checked = true; try { if (w === 'rechnung') localStorage.setItem(BASISKEY, 'rechnung'); else localStorage.removeItem(BASISKEY); } catch (e) {} }
 function artMerken(nr, a) { try { localStorage.setItem(ARTKEY, JSON.stringify({ nr: nr || '', art: a })); } catch (e) {} }
 /* Frist einer gespeicherten Stufe; ältere Belege kennen nur felder.frist */
 function stufeFrist(b, a) { const f = (b && b.fristen) || {}; return f[a] || ((b && b.felder) || {}).frist || ''; }
@@ -624,6 +628,7 @@ function regZeichnenRest(el) {
     if (($('name').value.trim() || $('schaden').value.trim()) && nrJetzt !== b.nr &&
         !confirm('Beleg ' + b.nr + ' laden?\n\nWas du gerade eingetippt hast, wird ersetzt.')) return;
     FELD_IDS.forEach(id => { if (id in b.felder) $(id).value = b.felder[id]; });
+    basisSetzen(b.felder.basis);
     /* Bezugsdaten aus den gespeicherten Stufen, passende naechste Stufe vorwaehlen */
     const st = b.stufen || {};
     if (st.abrechnung) $('abrDatum').value = st.abrechnung;
@@ -672,10 +677,14 @@ function regZeichnenRest(el) {
     try { const pk = JSON.parse(localStorage.getItem('mietixPapierkorb') || '[]') || []; pk.push({ id: 'schadensbeleg:' + Date.now(), ablage: 'schadensbelege', schluessel: weg.nr, eintrag: weg, zeit: new Date().toISOString(), text: 'Schadensbeleg ' + weg.nr + ' ' + (weg.name || '') }); localStorage.setItem('mietixPapierkorb', JSON.stringify(pk)); } catch (e) {}
     try { const alt = JSON.parse(localStorage.getItem(REGKEY) || '[]') || []; localStorage.setItem(REGKEY, JSON.stringify(alt.filter(x => x.nr !== weg.nr))); } catch (e) {}
     regSchreiben(l2); regZeichnen();
+    /* Gelöschte Nummer nicht wieder vergeben, Eingaben bleiben stehen (Nachtprüfung 09.11.2026) */
+    if ($('nr').value.trim() === weg.nr) { $('nr').value = ''; $('nr').dispatchEvent(new Event('input', { bubbles: true })); }
+    render();
   };
 }
 $('regExport').onclick = async function () {
-  const t = regLesen().map(b => [b.nr, deDatum(belegTag(b)), b.name, b.fahrzeug, fmt(b.offen || 0), b.status || 'offen'].join('  |  ')).join('\n')
+  const t = regLesen().map(b => { const e = fallBetrag(b), s = b.status || 'offen';   /* wie im Register (Nachtprüfung 09.11.2026) */
+    return [b.nr, deDatum(belegTag(b)), b.name, b.fahrzeug, e.rueck > 0 ? 'zurück ' + fmt(e.rueck) : fmt(e.offen), e.rueck > 0 ? (s === 'bezahlt' ? 'zurückgezahlt' : 'zurückzahlen') : (b.felder && !(e.offen > 0.004) ? 'erledigt' : s)].join('  |  '); }).join('\n')
     || 'Register ist leer.';
   try { await navigator.clipboard.writeText('Mietix Schadensbelege\n\n' + t); this.textContent = 'Kopiert'; }
   catch (e) { this.textContent = 'Kopieren nicht möglich'; }
@@ -695,7 +704,7 @@ function daten() {
     schaden, kvk, kau, forderung, diff,
     offen: Math.max(0, diff),
     rueck: diff < -0.004 ? -diff : 0,   /* Kaution größer als der Schaden: der Kunde bekommt den Rest zurück (02.11.2026, Baran) */
-    nr: $('nr').value.trim() || naechsteNummer(),
+    nr: $('nr').value.trim() || naechsteNummer(), tel: $('tel').value.trim(),
     datum: $('datum').value, frist: $('frist').value,
     abrDatum: $('abrDatum').value, erinDatum: $('erinDatum').value, mahnDatum: $('mahnDatum').value,
     name: $('name').value.trim(), strasse: $('strasse').value.trim(), ort: $('ort').value.trim(),
@@ -988,7 +997,7 @@ function ohneBetrag() {
 }
 $('copyBtn').addEventListener('click', async () => {
   const btn = $('copyBtn');
-  if (ohneBetrag()) return;
+  if (ohneBetrag() || nichtsOffen()) return;
   try { await navigator.clipboard.writeText(kundenText()); }
   catch (e) { const ta = document.createElement('textarea'); ta.value = kundenText(); document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
   const old = btn.innerHTML;
@@ -1046,7 +1055,7 @@ $('saveBtn').addEventListener('click', () => {
   }
   const felder = {};
   FELD_IDS.forEach(id => { felder[id] = $(id).value; });
-  felder.nr = d.nr;
+  felder.nr = d.nr; felder.basis = basis();
   /* Datum und Frist des Belegs gehören der Abrechnung (06.11.2026, Prüfung 2): eine Mahnung speichert nur ihre eigene Stufe
      mit eigenem Datum (stufen) und eigener Frist (fristen); Belegdatum und Abrechnungsfrist bleiben stehen */
   const altB = alt > -1 ? l[alt] : null, vf = (altB && altB.felder) || {};
@@ -1122,6 +1131,10 @@ $('saveBtn').addEventListener('click', () => {
   }
   kz.addEventListener('input', merkeKz);
   w.addEventListener('change', () => {
+    /* Vorschlag zieht mit, von Hand Getipptes bleibt (Nachtprüfung 09.11.2026): frei.value ist hier noch das vorige Auto */
+    const vor = frei.value.trim(), vorA = FLOTTE.filter(x => x.n === vor)[0];
+    if (vorA && kau.value.trim() === String(vorA.kaution)) kau.value = '';
+    if (vor && kz.value.trim() && kz.value.trim() === holeKz(vor)) kz.value = '';
     if (w.value === '__frei') { frei.style.display = 'block'; frei.value = ''; frei.focus(); }
     else if (w.value) {
       frei.style.display = 'none'; frei.value = w.value;
@@ -1140,7 +1153,7 @@ function vorgaenge() {
 }
 function fuelleAusVorgang(v) {
   /* Neuer Kunde erbt nichts vom vorigen: Beträge und Beleg-Nummer leer, sonst wird der alte Fall überschrieben (04.11.2026) */
-  if ($('name').value.trim() && $('name').value.trim() !== String(v.name || '').trim()) { FELD_IDS.forEach(id => { const e = $(id); if (e) e.value = ''; }); const n = $('nr'); if (n) n.value = ''; const ab = document.querySelector('#artSeg input[value="abrechnung"]'); if (ab) ab.checked = true; if (typeof waBtnStand === 'function') waBtnStand(); }
+  if ($('name').value.trim() && $('name').value.trim() !== String(v.name || '').trim()) { FELD_IDS.forEach(id => { const e = $(id); if (e) e.value = ''; }); const n = $('nr'); if (n) n.value = ''; $('datum').value = isoHeute(0); $('frist').value = isoHeute(14); basisSetzen('kv'); const ab = document.querySelector('#artSeg input[value="abrechnung"]'); if (ab) ab.checked = true; if (typeof waBtnStand === 'function') waBtnStand(); }
   const setz = (id, wert) => { const el = $(id); if (!el || wert == null || wert === '') return; el.value = wert; ['input', 'change'].forEach(ev => el.dispatchEvent(new Event(ev, { bubbles: true }))); };
   setz('name', v.name); setz('tel', v.telefon);
   if (v.anschrift) {
@@ -1216,6 +1229,7 @@ $('leerBtn').addEventListener('click', () => {
   w.value = '';
   $('fahrzeug').style.display = 'none';
   document.querySelector('#artSeg input[value="abrechnung"]').checked = true;
+  basisSetzen('kv');
   $('datum').value = isoHeute(0);
   $('frist').value = isoHeute(14);
   $('suche').value = '';
@@ -1238,13 +1252,15 @@ document.querySelectorAll('#artSeg input').forEach(el => el.addEventListener('ch
   if (window.SA_ENT) SA_ENT.merken();
   render();
 }));
-document.querySelectorAll('#basisSeg input').forEach(el => el.addEventListener('change', render));
+document.querySelectorAll('#basisSeg input').forEach(el => el.addEventListener('change', () => { basisSetzen(basis()); render(); }));
 FELD_IDS.forEach(id => { const e = $(id); if (!e) return; e.addEventListener('input', render); e.addEventListener('change', render); });
 regZeichnen();
 render();
 /* Nach dem Entwurf (DOMContentLoaded) die zuletzt gewählte Stufe wieder wählen; alte Entwürfe: Stufe, deren gespeichertes Datum passt */
 document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
   if (location.search) return;
+  let bg = ''; try { bg = localStorage.getItem(BASISKEY); } catch (e) {}
+  if (bg === 'rechnung') { basisSetzen(bg); render(); }
   let m = null; try { m = JSON.parse(localStorage.getItem(ARTKEY) || 'null'); } catch (e) {}
   const nrv = $('nr').value.trim();
   let a = m && (m.nr || '') === nrv ? m.art : '';
@@ -1686,6 +1702,9 @@ zeigen();abgleichen();auslagernBald();
   ["mietVonD","mietVonU","mietBisD","mietBisU"].forEach(i=>{$(i).addEventListener("input",zeichne);$(i).addEventListener("change",zeichne)});
   $("ztS").onclick=()=>mxAuf("fZeitS");$("ztS").onkeydown=e=>{if(e.key==="Enter")mxAuf("fZeitS")};
   document.addEventListener("click",e=>{if(e.target.closest("#fZeitS .mxZu,.mxBg,.ztFertig"))setTimeout(zeichne,0)});
+  ["mietVonD","mietVonU","mietBisD","mietBisU"].forEach(i=>$(i).addEventListener("input",()=>{$("ztFehler").textContent=""}));
+  /* „bis“ vor „von“ meldet rot wie der Zeitraum im Listenkopf (Nachtprüfung 09.11.2026) */
+  window.ztFertig=()=>{const vd=$("mietVonD").value,bd=$("mietBisD").value;if(vd&&bd&&vd+"T"+($("mietVonU").value||"00:00")>bd+"T"+($("mietBisU").value||"23:59")){$("ztFehler").textContent="„bis“ liegt vor „von“. Bitte Datum oder Uhrzeit ändern.";return}mxZu()};
   zeichne();setTimeout(zeichne,800)})();
 </script><script>
 /* Schutz (1.11.2026, Baran: geht etwas nicht, roter Hinweis mit Grund; alles sofort speichern) */
