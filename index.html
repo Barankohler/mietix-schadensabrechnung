@@ -284,6 +284,19 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 .mxKlein{margin-top:8px}.mxKlein>summary{display:inline-flex;align-items:center;gap:6px;list-style:none;cursor:pointer;font-size:14px;font-weight:800;color:#1C1C1E;background:#F2F2F4;border-radius:999px;padding:9px 14px;min-height:40px;box-sizing:border-box}
 .mxKlein>summary::-webkit-details-marker{display:none}.mxKlein>summary em{font-style:normal;color:#C4161C;font-size:18px;line-height:1;transition:transform .15s}.mxKlein[open]>summary em{transform:rotate(90deg)}
 .mxText{font-size:14px;color:#8A8A8E;font-weight:600;margin:0 0 10px;line-height:1.4}
+
+/* Schäden 11.11.2026: angefangener Fall, Fristen-Karte, Gespeichert-Knopf */
+#angefangen{display:none;background:#FFF7E0;border:1.5px solid #F2C94C;border-radius:16px;padding:14px 16px;margin:0 0 12px;font-size:16px;line-height:1.35}
+#angefangen b{display:block;color:#1C1C1E}#angefangen span{display:block;color:#6B5B1E;font-size:15px}
+#angefangen div{display:flex;gap:8px;margin-top:10px}
+#angefangen button{flex:1;border:0;border-radius:12px;padding:11px;background:#EDEDF0;color:#1C1C1E;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer}
+#fristKarte{display:none;background:#fff;border:1.5px solid #E4E4E7;border-radius:16px;padding:14px 16px;margin:0 0 12px;font-size:16px;line-height:1.35}
+#fristKarte .fkT{display:block;color:#C4161C;font-weight:800}
+#fristKarte .fkZ{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
+#fristKarte .fkZ span{min-width:0}#fristKarte .fkZ b{display:block}#fristKarte .fkZ i{display:block;font-style:normal;color:#666;font-size:14px}
+#fristKarte .fkZ button{flex:0 0 auto;border:0;border-radius:12px;padding:9px 12px;background:#EDEDF0;color:#1C1C1E;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap}
+#fristKarte .fkMehr{margin-top:10px;color:#666;font-size:14px}
+#saveBtn.gespeichert{background:#E8F5EC!important;color:#1B7A44!important}
 </style>
 <style>
 /* Knopf-Paar je Nachricht (02.11.2026) */
@@ -340,10 +353,12 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
 <div class="wrap">
   <!-- EINGABE -->
   <div class="eingabe">
+  <div id="angefangen" role="status"></div>
+  <div id="fristKarte"></div>
   <!-- Schäden als ein Raum (Liste Punkt 13): Schadensklärung mit Merktexten hinter einem Knopf -->
   <a href="https://barankohler.github.io/mietix-schadensklaerung/" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1.5px solid #E4E4E7;border-radius:16px;padding:14px 16px;min-height:60px;margin:0 0 12px;text-decoration:none;color:#1C1C1E"><span><b style="display:block;font-size:16px;font-weight:800">Schadensklärung</b><i style="display:block;font-style:normal;font-size:13px;color:#8A8A8E;font-weight:600;margin-top:2px">Merktexte für den Kunden, Ablauf bei Unfall</i></span><em style="font-style:normal;font-size:28px;color:#C4161C;font-weight:700">›</em></a>
   <section class="panel">
-    <div class="panel-head"><h2>Eingabe</h2><button class="mini" id="leerBtn" type="button">Zurücksetzen</button></div>
+    <div class="panel-head"><h2>Eingabe</h2><button class="mini" id="leerBtn" type="button">+ Neuer Fall</button></div>
     <form id="f" autocomplete="off">
 
       <div class="field">
@@ -448,9 +463,9 @@ input,select,textarea{font-size:16px;font-family:inherit;max-width:100%;box-sizi
       <div class="field">
         <label>So läuft der Prozess</label>
         <ol class="prozess">
-          <li><b>Abrechnung</b> senden, Frist 14 Tage. Danach "In Register speichern": der Fall ist erfasst, der Status steht auf <i>offen</i>.</li>
-          <li>Frist verstrichen? Im Register den Fall antippen, dann <b>1. Mahnung schreiben</b>: alles ist vorbelegt, die <b>1. Mahnung</b> ist schon ausgewählt (Frist 7 Tage). Senden, speichern.</li>
-          <li>Wieder nichts? Fall antippen, <b>2. Mahnung schreiben</b>: Verzug, letzte Frist 7 Tage, Inkasso-Ankündigung. Senden, speichern.</li>
+          <li><b>Abrechnung</b> senden, Frist 14 Tage. Beim Senden, Kopieren oder Drucken kommt der Fall von selbst ins Register, der Status steht auf <i>offen</i>.</li>
+          <li>Frist verstrichen? Im Register den Fall antippen, dann <b>1. Mahnung schreiben</b>: alles ist vorbelegt, die <b>1. Mahnung</b> ist schon ausgewählt (Frist 7 Tage). Senden, fertig.</li>
+          <li>Wieder nichts? Fall antippen, <b>2. Mahnung schreiben</b>: Verzug, letzte Frist 7 Tage, Inkasso-Ankündigung. Senden, fertig.</li>
           <li>Immer noch nichts? Fall antippen, <b>Inkasso-Übergabe</b>: Falldatenblatt drucken und mit den Anlagen ans Inkassobüro geben.</li>
         </ol>
         <div class="hint"><b>Beweise sichern, als käme jeder Fall vor Gericht:</b> Jedes Schreiben als PDF ablegen (Drucken / PDF). Versand per E-Mail und zusätzlich per Einwurf-Einschreiben, so ist der Zugang beweisbar. Dazu gehören: unterschriebener Mietvertrag, Übergabe- und Rückgabeprotokoll, Fotos mit Datum, Kostenvoranschlag oder Reparaturrechnung.</div>
@@ -998,6 +1013,7 @@ function ohneBetrag() {
 $('copyBtn').addEventListener('click', async () => {
   const btn = $('copyBtn');
   if (ohneBetrag() || nichtsOffen()) return;
+  if (!fallSpeichern('senden')) return;   /* Kopieren speichert den Fall mit (11.11.2026) */
   try { await navigator.clipboard.writeText(kundenText()); }
   catch (e) { const ta = document.createElement('textarea'); ta.value = kundenText(); document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
   const old = btn.innerHTML;
@@ -1018,26 +1034,35 @@ function waBtnStand() { const b = $('waBtn'); if (b) b.style.display = art() ===
 document.addEventListener('change', e => { if (e.target.closest && e.target.closest('#artSeg')) waBtnStand(); });
 $('waBtn').addEventListener('click', () => {
   if (art() === 'inkasso' || ohneBetrag() || nichtsOffen()) return;
+  if (!fallSpeichern('senden')) return;   /* WhatsApp speichert den Fall mit (11.11.2026) */
   const txt = encodeURIComponent(kundenText());
   const tel = $('tel').value.trim();
   window.open(tel ? 'https://wa.me/' + nkNummer(tel) + '?text=' + txt : 'https://wa.me/?text=' + txt, '_blank');
 });
-$('printBtn').addEventListener('click', () => { if (!ohneBetrag() && !nichtsOffen()) window.print(); });
+$('printBtn').addEventListener('click', () => { if (!ohneBetrag() && !nichtsOffen() && fallSpeichern('senden')) window.print(); });   /* Drucken speichert mit (11.11.2026) */
 /* Höhe der unteren Leiste für den roten Hinweis darüber */
 { const leiste = () => { const a = document.querySelector('.actionbar'); if (a) document.documentElement.style.setProperty('--leisteH', a.offsetHeight + 'px'); };
   leiste(); window.addEventListener('resize', leiste); }
-$('saveBtn').addEventListener('click', () => {
+function fallSpeichern(wie) {
   const d = daten(), a = art();
+  if (wie === 'tippen' && (!d.name || !(d.forderung > 0) || (a !== 'abrechnung' && !(d.offen > 0.004)))) return false;
   /* Leeres Formular verbraucht sonst eine SA-Nummer (31.10.2026, Prüfbericht) */
   if (!d.name || !(d.forderung > 0)) {
     const btn = $('saveBtn'), old = btn.dataset.orig = btn.dataset.orig || btn.innerHTML;
     btn.textContent = !d.name ? 'Erst Namen eintragen' : 'Erst Betrag eintragen';
     setTimeout(() => { btn.innerHTML = old; }, 1800);
     $(!d.name ? 'name' : 'schaden').focus();
-    return;
+    if (wie === 'senden' && window.mxFehler) mxFehler(!d.name ? 'Erst den Namen eintragen. Ohne Namen wird nichts gesendet.' : 'Erst den Schadensbetrag eintragen.');
+    return false;
   }
-  if (nichtsOffen()) return;
+  if (nichtsOffen()) return false;
   const l = regLesen();
+  /* Anderer Kunde unter einer gespeicherten Nummer: nie still überschreiben (11.11.2026) */
+  { const nrJ = $('nr').value.trim(), schon = nrJ && l.find(b => b.nr === nrJ);
+    if (schon && schon.name && !gleicherName(schon.name, d.name)) {
+      if (wie === 'tippen') return false;
+      if (confirm('Unter ' + nrJ + ' steht ' + schon.name + '. Jetzt steht hier ' + d.name + '.\n\nOK: als neuer Fall speichern, ' + schon.name + ' bleibt.\nAbbrechen: ' + nrJ + ' auf ' + d.name + ' ändern.')) { $('nr').value = ''; }
+    } }
   /* Ohne Nummer: derselbe Fall steht schon im Register (z. B. alter Entwurf nach dem Neuladen)? Dann diesen Beleg ändern, nicht doppelt anlegen (06.11.2026) */
   if (!$('nr').value.trim()) {
     const gleich = ['name', 'schaden', 'kvkosten', 'kaution', 'schadenstag'], f0 = {}; gleich.forEach(id => { f0[id] = $(id).value.trim(); });
@@ -1081,15 +1106,18 @@ $('saveBtn').addEventListener('click', () => {
     regZeichnen(); render();
     btn.textContent = 'Nicht gespeichert';
     if (window.mxFehler && !document.querySelector('#mxFehler.an')) mxFehler('Nicht gespeichert: Der Beleg konnte auf diesem Gerät nicht gespeichert werden.');
-    setTimeout(() => { btn.innerHTML = old; }, 2500);
-    return;
+    btn.blitz = Date.now(); setTimeout(() => { btn.blitz = 0; btn.innerHTML = old; speicherStand(); }, 2500);
+    return false;
   }
   /* Die Nummer bleibt im Formular und im Entwurf: nochmal Speichern ändert denselben Beleg */
   $('nr').value = d.nr; $('nr').dispatchEvent(new Event('input', { bubbles: true }));
-  regZeichnen(); render();
-  btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Gespeichert als ' + esc(d.nr);
-  setTimeout(() => { btn.innerHTML = old; }, 2500);
-});
+  if (window.SA_ENT) SA_ENT.merken();
+  regZeichnen(); render(); angefangenZeigen(false);
+  if (wie !== 'tippen') { btn.blitz = Date.now(); btn.classList.add('gespeichert');
+    btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Gespeichert als ' + esc(d.nr);
+    setTimeout(() => { btn.blitz = 0; btn.innerHTML = old; speicherStand(); }, 2500); }
+  return d.nr;
+}
 
 /* ---------- Flotte (aus der gemeinsamen Preisdatei) ---------- */
 (function () {
@@ -1220,22 +1248,6 @@ function fuelleAusVorgang(v) {
 })();
 
 /* ---------- Zurücksetzen: alles leeren, wie frisch geöffnet ---------- */
-$('leerBtn').addEventListener('click', () => {
-  if (!confirm('Alle Eingaben zurücksetzen? Gespeicherte Fälle im Register bleiben.')) return;   // Rückfrage (1.11.2026)
-  if (window.SA_ENT) SA_ENT.weg();
-  artMerken('', 'abrechnung');
-  FELD_IDS.forEach(id => { const e = $(id); if (e) e.value = ''; });
-  const w = $('fahrzeugwahl');
-  w.value = '';
-  $('fahrzeug').style.display = 'none';
-  document.querySelector('#artSeg input[value="abrechnung"]').checked = true;
-  basisSetzen('kv');
-  $('datum').value = isoHeute(0);
-  $('frist').value = isoHeute(14);
-  $('suche').value = '';
-  $('sucheListe').classList.remove('offen');
-  render();
-});
 
 /* ---------- Start ---------- */
 $('datum').value = isoHeute(0);
@@ -1267,7 +1279,105 @@ document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
   if (!a && nrv) { const b = regLesen().find(x => x.nr === nrv), st = (b && b.stufen) || {}; a = ['inkasso', 'mahnung', 'erinnerung'].find(k => st[k] && st[k] === $('datum').value) || ''; }
   const el = a && document.querySelector('#artSeg input[value="' + a + '"]');
   if (el && !el.checked) { el.checked = true; waBtnStand(); render(); }
+  /* Beim Öffnen (11.11.2026): Fall steht schon im Register, dann leer anfangen. Angefangenes bleibt mit gelbem Hinweis. */
+  const bAlt = registerFall();
+  if (bAlt && (bAlt.stufen || {})[art()] && gleicherName(bAlt.name, $('name').value)) formLeeren();
+  else if ($('name').value.trim() || $('schaden').value.trim()) angefangenZeigen(true);
 }, 0));
+
+/* ---------- Schäden 11.11.2026 (Baran: „Warum muss ich manuell auf Zurücksetzen drücken?“, „In Register speichern“ wurde vergessen) ----------
+   1. WhatsApp, Kopieren und Drucken speichern den Fall selbst ins Register.
+   2. Ein Fall, der schon im Register steht, speichert Änderungen beim Tippen.
+   3. Steht der Fall beim Öffnen schon im Register, beginnt die Seite leer. Nur Angefangenes kommt wieder, mit gelbem Hinweis.
+   4. Ein gespeicherter Fall wird nie still von einem anderen Kunden überschrieben.
+   5. Fristen-Karte: abgelaufene Fristen oben, ein Tipp öffnet die nächste Mahnung. */
+const SA_OHNE = ['nr', 'datum', 'frist', 'abrDatum', 'erinDatum', 'mahnDatum'];
+function gleicherName(a, b) { return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase(); }
+function registerFall() { const nr = $('nr').value.trim(); return nr ? regLesen().find(x => x.nr === nr) || null : null; }
+function istGespeichert() {
+  const b = registerFall(); if (!b || !b.felder || !(b.stufen || {})[art()] || !gleicherName(b.name, $('name').value)) return false;
+  return FELD_IDS.filter(id => SA_OHNE.indexOf(id) < 0).every(id => String(b.felder[id] == null ? '' : b.felder[id]).trim() === String($(id).value || '').trim());
+}
+function speicherStand() {
+  const btn = $('saveBtn'); if (!btn) return; const old = btn.dataset.orig = btn.dataset.orig || btn.innerHTML;
+  if (btn.blitz && Date.now() - btn.blitz < 2400) return;
+  if (istGespeichert()) { btn.classList.add('gespeichert'); btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Gespeichert'; }
+  else if (btn.classList.contains('gespeichert') || btn.innerHTML !== old) { btn.classList.remove('gespeichert'); btn.innerHTML = old; }
+}
+function formLeeren() {
+  if (window.SA_ENT) SA_ENT.weg();
+  artMerken('', 'abrechnung');
+  FELD_IDS.forEach(id => { const e = $(id); if (e) e.value = ''; });
+  const w = $('fahrzeugwahl');
+  w.value = '';
+  $('fahrzeug').style.display = 'none';
+  document.querySelector('#artSeg input[value="abrechnung"]').checked = true;
+  basisSetzen('kv');
+  $('datum').value = isoHeute(0);
+  $('frist').value = isoHeute(14);
+  $('suche').value = '';
+  $('sucheListe').classList.remove('offen');
+  angefangenZeigen(false);
+  waBtnStand(); render();
+}
+function schnappschuss() { const v = {}; FELD_IDS.forEach(id => { v[id] = $(id).value; });
+  return { v: v, art: art(), basis: basis(), fw: $('fahrzeugwahl').value, frei: $('fahrzeug').style.display }; }
+function zurueckholen(s) {
+  FELD_IDS.forEach(id => { if (id in s.v) $(id).value = s.v[id]; });
+  const a = document.querySelector('#artSeg input[value="' + s.art + '"]'); if (a) a.checked = true;
+  basisSetzen(s.basis); $('fahrzeugwahl').value = s.fw; $('fahrzeug').style.display = s.frei;
+  artMerken($('nr').value.trim(), s.art); waBtnStand(); render();
+  if (window.SA_ENT) SA_ENT.merken();
+}
+/* Neuer Fall: Gespeichertes ohne Frage leeren (es steht im Register), Angefangenes mit Rückfrage und Rückgängig */
+function neuerFall(ohneFrage) {
+  const n = $('name').value.trim(), etwas = n || $('schaden').value.trim(), gesp = istGespeichert();
+  if (etwas && !gesp && !ohneFrage && !confirm('Den angefangenen Fall' + (n ? ' von ' + n : '') + ' verwerfen?\n\nEr ist noch nicht im Register. Mit Rückgängig holst du ihn zurück.')) return;
+  const snap = etwas && !gesp ? schnappschuss() : null;
+  formLeeren();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (snap && window.mxRueckBar) mxRueckBar('Fall verworfen', () => zurueckholen(snap));
+}
+function angefangenZeigen(an) {
+  const el = $('angefangen'); if (!el) return;
+  if (!an) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  const n = $('name').value.trim(), d = daten(), A = { abrechnung: 'Abrechnung', erinnerung: '1. Mahnung', mahnung: '2. Mahnung', inkasso: 'Inkasso-Übergabe' }[art()];
+  el.innerHTML = '<b>Angefangen: ' + esc(A + (n ? ' an ' + n : '')) + (d.offen > 0.004 ? ', ' + esc(fmt(d.offen)) : '') + '</b><span>Noch nicht gesendet und nicht im Register.</span>'
+    + '<div><button type="button" id="angWeiter">Weitermachen</button><button type="button" id="angNeu">Neuer Fall</button></div>';
+  el.style.display = 'block';
+  $('angWeiter').onclick = () => { angefangenZeigen(false); const p = $('f'); if (p) p.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  $('angNeu').onclick = () => neuerFall(true);
+}
+function fristKarte() {
+  const el = $('fristKarte'); if (!el) return;
+  const heute = isoHeute(0), T = { erinnerung: '1. Mahnung', mahnung: '2. Mahnung', inkasso: 'Inkasso' };
+  const f = regLesen().map((b, i) => ({ b: b, i: i, n: naechsteStufe(b) })).filter(x => x.n && x.b.status !== 'inkasso').map(x => {
+    const st = x.b.stufen || {}, zl = st.mahnung ? 'mahnung' : st.erinnerung ? 'erinnerung' : 'abrechnung';
+    x.frist = stufeFrist(x.b, zl); return x; }).filter(x => x.frist && x.frist < heute).sort((a, b) => a.frist.localeCompare(b.frist));
+  if (!f.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.innerHTML = '<b class="fkT">Frist abgelaufen: ' + (f.length === 1 ? '1 Fall' : f.length + ' Fälle') + '</b>'
+    + f.slice(0, 5).map(x => '<div class="fkZ"><span><b>' + esc(x.b.name || 'ohne Name') + '</b><i>' + esc(x.b.nr + ', ' + fmt(fallBetrag(x.b).offen) + ', Frist ' + deDatum(x.frist)) + '</i></span>'
+      + '<button type="button" data-fk="' + x.i + '">' + T[x.n] + ' ›</button></div>').join('')
+    + (f.length > 5 ? '<div class="fkMehr">und ' + (f.length - 5) + ' weitere im Register</div>' : '');
+  el.style.display = 'block';
+  el.querySelectorAll('[data-fk]').forEach(k => k.onclick = () => {
+    const nrVorher = $('nr').value; window.fallLaden(+k.dataset.fk, false);
+    angefangenZeigen(false);
+    if ($('nr').value !== nrVorher || $('name').value) setTimeout(() => { const p = $('f'); if (p) p.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 350);
+  });
+}
+{ const _rz = regZeichnen; regZeichnen = function () { _rz.apply(this, arguments); try { fristKarte(); } catch (e) {} }; }
+{ const _rd = render; render = function () { _rd.apply(this, arguments); try { speicherStand(); if (istGespeichert()) angefangenZeigen(false); } catch (e) {} }; }
+/* Änderungen an einem Fall aus dem Register gleich mitspeichern, nur bei echtem Tippen und nur für die schon gespeicherte Stufe */
+{ let t = null;
+  const tipp = e => { if (!e.isTrusted) return; if (e.target && e.target.closest && e.target.closest('#artSeg,#suche')) return;
+    angefangenZeigen(false);
+    clearTimeout(t); t = setTimeout(() => { const b = registerFall();
+      if (b && b.felder && (b.stufen || {})[art()] && gleicherName(b.name, $('name').value)) fallSpeichern('tippen'); }, 700); };
+  $('f').addEventListener('input', tipp); $('f').addEventListener('change', tipp); }
+$('saveBtn').addEventListener('click', () => fallSpeichern(false));
+$('leerBtn').addEventListener('click', () => neuerFall(false));
+fristKarte(); speicherStand();
 </script>
 <script>/* Mietix Abgleich: Mietverträge, Anfragen, Kunden und Fahrzeuge auf allen Geräten gleich (Supabase Frankfurt, seit 26.10.2026).
    Wird von tools/vertrag/build_html.py und tools/anfragen/build_html.py in die Seite eingebaut.
